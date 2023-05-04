@@ -76,11 +76,11 @@ class AWK(data.QsciLexerCustom):
         return "AWK"
     
     def description(self, style):
-        if style < len(self.styles):
-            description = "Custom lexer for the AWK programming languages"
-        else:
-            description = ""
-        return description
+        return (
+            "Custom lexer for the AWK programming languages"
+            if style < len(self.styles)
+            else ""
+        )
     
     def defaultStyle(self):
         return self.styles["Default"]

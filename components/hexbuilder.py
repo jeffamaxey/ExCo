@@ -155,10 +155,10 @@ class HexBuilder:
                                           ],
                                           shadow=False):
         qpainter = self.painter
-        
+
         if line_width == 0:
             return
-        
+
         pen = data.QPen(data.Qt.SolidLine)
         pen.setCapStyle(data.Qt.RoundCap)
         pen.setJoinStyle(data.Qt.RoundJoin)
@@ -172,7 +172,7 @@ class HexBuilder:
         y_correction = self.edge_length / (2 * math.tan(math.radians(30)))
         hex_points = [(int(x-x_correction), int(y-y_correction)) for x, y in hex_points]
         hex_lines = []
-        
+
         def line_test(in_line):
             DIFF = 3
             line = in_line
@@ -188,23 +188,23 @@ class HexBuilder:
                     abs(yl1 - y1) < DIFF and
                     abs(xl2 - x2) < DIFF and 
                     abs(yl2 - y2) < DIFF):
-                        if not(line in self.stored_lines):
-                            self.stored_lines.append(line)
-                            #self.stored_lines.append(reversed_line)
-                        return False
+                    if line not in self.stored_lines:
+                        self.stored_lines.append(line)
+                        #self.stored_lines.append(reversed_line)
+                    return False
                 elif (abs(xl1 - xr1) < DIFF and 
                     abs(yl1 - yr1) < DIFF and
                     abs(xl2 - xr2) < DIFF and 
                     abs(yl2 - yr2) < DIFF):
-                        if not(reversed_line in self.stored_lines):
-                            self.stored_lines.append(line)
-                            #self.stored_lines.append(reversed_line)
-                        return False
+                    if reversed_line not in self.stored_lines:
+                        self.stored_lines.append(line)
+                        #self.stored_lines.append(reversed_line)
+                    return False
             else:
                 self.stored_lines.append(line)
                 self.stored_lines.append(reversed_line)
                 return True
-        
+
         for i in range(len(hex_points)):
             if paint_enabled[i] == False:
                 continue
@@ -224,7 +224,7 @@ class HexBuilder:
                 shadow_0_color.setAlpha(64)
                 shadow_1_color = data.QColor(line_color)
                 shadow_1_color.setAlpha(128)
-                
+
                 pen.setWidth(int(line_width*2.0))
                 pen.setColor(shadow_0_color)
                 qpainter.setPen(pen)
@@ -247,10 +247,10 @@ class HexBuilder:
                           paint_enabled=[True,True,True,True,True,True],
                           shadow=False):
         qpainter = self.painter
-        
+
         if line_width == 0:
             return
-        
+
         pen = data.QPen(data.Qt.SolidLine)
         pen.setCapStyle(data.Qt.RoundCap)
         pen.setJoinStyle(data.Qt.RoundJoin)
@@ -264,7 +264,7 @@ class HexBuilder:
         y_correction = self.edge_length / (2 * math.tan(math.radians(30)))
         hex_points = [(int(x-x_correction), int(y-y_correction)) for x, y in hex_points]
         hex_lines = []
-        
+
         for i in range(len(hex_points)):
             if paint_enabled[i] == False:
                 continue
@@ -283,7 +283,7 @@ class HexBuilder:
                 shadow_0_color.setAlpha(64)
                 shadow_1_color = data.QColor(line_color)
                 shadow_1_color.setAlpha(128)
-                
+
                 pen.setWidth(int(line_width*2.0))
                 pen.setColor(shadow_0_color)
                 qpainter.setPen(pen)
@@ -295,9 +295,7 @@ class HexBuilder:
                 pen.setWidth(int(line_width))
                 pen.setColor(line_color)
                 qpainter.setPen(pen)
-                qpainter.drawLines(*hex_lines)
-            else:
-                qpainter.drawLines(*hex_lines)
+            qpainter.drawLines(*hex_lines)
     
     def draw_filled_hexagon(self, position, fill_color, number=None):
         qpainter = self.painter
@@ -374,7 +372,7 @@ class HexBuilder:
         grid_list = []
         direction = False
         add_down_step = False
-        for i in range(count-1):
+        for _ in range(count-1):
             if add_down_step == True:
                 add_down_step = False
                 grid_list.append((3, True))

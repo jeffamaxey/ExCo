@@ -39,9 +39,7 @@ def set_application_font(name, size):
             name = f
             break
     if not font_found:
-        raise ValueError(
-            "Font '{}' is not installed on the system!".format(name)
-        )
+        raise ValueError(f"Font '{name}' is not installed on the system!")
     # Apply the font for the whole application
     font = data.QFont(name, size)
     data.current_font_name = name

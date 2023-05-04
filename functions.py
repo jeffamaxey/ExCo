@@ -53,7 +53,7 @@ def create_icon(icon_name):
         cached_icon = icon_cache[full_icon_path]
         return data.QIcon(cached_icon)
     if not os.path.isfile(full_icon_path):
-        raise Exception("Icon file doesn't exist: {}".format(full_icon_path))
+        raise Exception(f"Icon file doesn't exist: {full_icon_path}")
     new_icon = data.QIcon(full_icon_path)
     icon_cache[full_icon_path] = new_icon
     return new_icon
@@ -61,7 +61,7 @@ def create_icon(icon_name):
 def get_resource_file(relative_path):
     path = unixify_path_join(data.resources_directory, relative_path)
     if not os.path.isfile(path):
-        raise Exception("[Resources] File does not exist: {}".format(path))
+        raise Exception(f"[Resources] File does not exist: {path}")
     return path
 
 pixmap_cache = {}
@@ -70,14 +70,14 @@ def create_pixmap(pixmap_name, directory=None):
     Function for initializing and returning an QPixmap object
     """
     global pixmap_cache
-    if directory == None:
+    if directory is None:
         directory = data.resources_directory
     pixmap_path = unixify_path_join(directory, pixmap_name)
     if pixmap_path in pixmap_cache.keys():
         cached_pixmap = pixmap_cache[pixmap_path]
         return data.QPixmap(cached_pixmap)
     if not os.path.isfile(pixmap_path):
-        raise Exception("Pixmap file doesn't exist: {}".format(pixmap_path))
+        raise Exception(f"Pixmap file doesn't exist: {pixmap_path}")
     new_pixmap = data.QPixmap(pixmap_path)
     pixmap_cache[pixmap_path] = new_pixmap
     return new_pixmap
@@ -150,7 +150,7 @@ def get_language_file_icon(language_name):
         return create_icon('language_icons/logo_fortran.png')
     elif language_name  == "fortran77":
         return create_icon('language_icons/logo_fortran77.png')
-    elif language_name  == "ini" or language_name  == "makefile":
+    elif language_name in ["ini", "makefile"]:
         return create_icon('tango_icons/document-properties.png')
     elif language_name  == "coffeescript":
         return create_icon('language_icons/logo_coffeescript.png')
@@ -160,8 +160,6 @@ def get_language_file_icon(language_name):
         return create_icon('language_icons/logo_java.png')
     elif language_name  == "javascript":
         return create_icon('language_icons/logo_javascript.png')
-    elif language_name  == "makefile":
-        return create_icon('language_icons/logo_makefile.png')
     elif language_name  == "octave":
         return create_icon('language_icons/logo_octave.png')
     elif language_name  == "pascal":
@@ -192,10 +190,7 @@ def create_language_document_icon_from_path(path, check_content=True):
 def get_file_size_Mb(file_with_path):
     """Get the file size in Mb"""
     size_bytes = os.path.getsize(file_with_path)
-    #Convert size into megabytes
-    size_Mb = size_bytes / (1024 * 1024)
-    #return the size in megabyte
-    return size_Mb
+    return size_bytes / (1024 * 1024)
 
 def find_files_with_text(search_text, 
                          search_dir, 
@@ -342,7 +337,7 @@ def replace_text_in_files(search_text,
         break_on_find=False,
         file_filter=file_filter
     )
-    if found_files == None:
+    if found_files is None:
         return []
     #Loop through the found list and replace the text
     for file in found_files:
@@ -386,7 +381,7 @@ def replace_text_in_files_enum(search_text,
         break_on_find=False,
         file_filter=file_filter
     )
-    if found_files == None:
+    if found_files is None:
         return {}
     #Compile the regex expression according to case sensitivity
     if case_sensitive == True:
@@ -493,6 +488,7 @@ def get_nim_node_tree(nim_code):
                 return get_line_indentation(lines[ln])
         else:
             return 250
+
     #Nested function for finding the closing parenthesis of parameter definitions
     def get_closing_parenthesis(current_step, lines):
         for ln in range(current_step, len(lines)):
@@ -500,13 +496,14 @@ def get_nim_node_tree(nim_code):
                 return ln
         else:
             return None
+
     #Nested function for creating a procedure, method, macro or template node
     def create_node(node, 
-                    search_string,  
-                    current_line, 
-                    current_line_number, 
-                    line_list, 
-                    previous_offset=0):
+                        search_string,  
+                        current_line, 
+                        current_line_number, 
+                        line_list, 
+                        previous_offset=0):
         #Reset the procedure's starting line adjustment variable
         body_starting_line_number = None
         #Reset the local skip line variable
@@ -525,11 +522,11 @@ def get_nim_node_tree(nim_code):
             )
             name_match_object = re.search(proc_name_search_pattern, current_line)
             for i in range(1, 4):
-                node.name = name_match_object.group(i)
-                if node.name != "" and node.name != None:
+                node.name = name_match_object[i]
+                if node.name not in ["", None]:
                     break
             #Skip lines if the parameters stretch over multiple lines
-            if not(")" in current_line):
+            if ")" not in current_line:
                 body_starting_line_number = get_closing_parenthesis(
                     current_line_number+1, 
                     line_list
@@ -580,24 +577,27 @@ def get_nim_node_tree(nim_code):
             #The procedure/macro/... has no parameters, but has a return type
             node.name = current_line.replace(search_string, "", 1).split(":")[0].strip()
             #Special parsing for classes
-            if (search_string == "class" or
-                search_string == "property"):
+            if search_string in ["class", "property"]:
                 node.name = node.name.split()[0]
         else:
             #The procedure/macro/... has no parameters and no return type
             node.name = current_line.replace(search_string, "", 1).split()[0].strip()
-        
+
         #Parse node
         if "=" in current_line and current_line.strip().endswith("="):
             #Check if the declaration is a one-liner
-            if ((current_line.strip().endswith("=") == False) and
-                ((len(current_line.split("=")) == 2 and 
-                    current_line.split("=")[1].strip() != "") or
-                 (len(current_line.split("=")) > 2 and 
-                    current_line[current_line.rfind(")"):].split("=")[1] != ""))):
-                #One-liner
-                pass
-            else:
+            if (
+                current_line.strip().endswith("=") != False
+                or (
+                    len(current_line.split("=")) != 2
+                    or current_line.split("=")[1].strip() == ""
+                )
+                and (
+                    len(current_line.split("=")) <= 2
+                    or current_line[current_line.rfind(")") :].split("=")[1]
+                    == ""
+                )
+            ):
                 #Adjust the procedure body starting line as needed
                 starting_line_number = current_line_number + 1
                 if body_starting_line_number != None:
@@ -624,9 +624,7 @@ def get_nim_node_tree(nim_code):
                     local_skip_to_line = len(line_list) - 1
                 starting_line_number += previous_offset
                 node = parse_node(node, sub_node_lines, line_offset=starting_line_number)
-        elif (search_string == "class" or
-              search_string == "namespace" or
-              search_string == "property"):
+        elif search_string in ["class", "namespace", "property"]:
             """special macro identifiers: class, namespace, ..."""
             #Adjust the procedure body starting line as needed
             starting_line_number = current_line_number + 1
@@ -659,7 +657,7 @@ def get_nim_node_tree(nim_code):
             node.type = "forward declaration"
         #Return the relevant data
         return node, local_skip_to_line
-                    
+
     #Split the Nim code into lines
     nim_code_lines = nim_code.split("\n")
     #Create and initialize the main node that will hold all other nodes
@@ -706,7 +704,7 @@ def get_nim_node_tree(nim_code):
                 stringing           = False
                 string_character    = None
                 for ch_count, ch in enumerate(line):
-                    if ch == "\"" or ch == "\'":
+                    if ch in ["\"", "\'"]:
                         #Catch the string building characters
                         if stringing == False:
                             stringing           = True
@@ -719,7 +717,7 @@ def get_nim_node_tree(nim_code):
                         #comment character to the end of the line
                         line = line[:ch_count].strip()
                         break
-            
+
             if import_statement == True:
                 if current_indentation == compare_indentation:
                     for module in line.split(","):
@@ -776,7 +774,7 @@ def get_nim_node_tree(nim_code):
                     if ":" in line and "=" in line and (line.find(":") < line.find("=")):
                         type = line.split(":")[1].split("=")[0].strip()
                         line = line.split(":")[0].strip()
-                    elif ":" in line and not("=" in line):
+                    elif ":" in line and "=" not in line:
                         type = line.split(":")[1].strip()
                         line = line.split(":")[0].strip()
                     elif "=" in line:
@@ -811,7 +809,7 @@ def get_nim_node_tree(nim_code):
                 namespace_statement = False
             elif property_statement == True:
                 property_statement = False
-            
+
             #Testing for base level declarations
             if line.startswith("import ") or line == "import":
                 if line == "import":
@@ -879,7 +877,7 @@ def get_nim_node_tree(nim_code):
                     if ":" in line and "=" in line and (line.find(":") < line.find("=")):
                         type = line.split(":")[1].split("=")[0].strip()
                         line = line.split(":")[0].strip()
-                    elif ":" in line and not("=" in line):
+                    elif ":" in line and "=" not in line:
                         type = line.split(":")[1].strip()
                         line = line.split(":")[0].strip()
                     elif "=" in line:
@@ -1052,6 +1050,7 @@ def get_nim_node_tree(nim_code):
                 #Set the class flag
                 namespace_statement = True
         return input_node
+
     #Parse the main node
     main_node = parse_node(main_node, nim_code_lines)
     #Return the node list
@@ -1066,18 +1065,17 @@ def get_python_node_list(python_code):
     def check_children(node, level, function_list):
         lst = []
         for i in ast.iter_child_nodes(node):
-            if isinstance(i, ast.ClassDef) or isinstance(i, ast.FunctionDef):
-                if isinstance(i, ast.FunctionDef):
-                    #Remove the function from the global function list
-                    if i in function_list:
-                        function_list.remove(i)
+            if isinstance(i, (ast.ClassDef, ast.FunctionDef)):
+                if isinstance(i, ast.FunctionDef) and i in function_list:
+                    function_list.remove(i)
                 lst.append((level, i))
             #Always descend into the child node to check for nested functions/classes
             lst.extend(check_children(i, level+1, function_list))
         return lst
+
     #Parse the file
     parsed_string       = ast.parse(python_code)
-    nodes               = [node for node in ast.walk(parsed_string)]
+    nodes = list(ast.walk(parsed_string))
     #Get import/import_from nodes, combine them into one list and sort them
     import_nodes        = [(node.names[0].name, node.lineno) for node in nodes if isinstance(node, ast.Import)]
     importfrom_nodes    = [(node.module, node.lineno) for node in nodes if isinstance(node, ast.ImportFrom)]
@@ -1092,7 +1090,7 @@ def get_python_node_list(python_code):
     class_tree_nodes = []
     for c_node in class_nodes:
         #Check if the node has already been parsed as a child node in another class
-        if not(c_node in children):
+        if c_node not in children:
             cc = check_children(c_node, 0, function_nodes)
             class_tree_nodes.append((c_node, cc))
             children.extend([c[1] for c in cc])
@@ -1112,7 +1110,7 @@ def get_python_node_tree(python_code):
             self.line_number = line_number
             self.level = level
             self.children = []
-    
+
     # Main parsing function
     def parse_node(ast_node, level, parent_node=None):
         nonlocal globals_list
@@ -1157,14 +1155,16 @@ def get_python_node_tree(python_code):
                 ast_node.lineno, 
                 level
             )
-        elif isinstance(ast_node, ast.Assign) and (level == 0 or parent_node == None):
+        elif isinstance(ast_node, ast.Assign) and (
+            level == 0 or parent_node is None
+        ):
             # Globals that do are not defined with the 'global' keyword,
             # but are defined on the top level
             new_nodes = []
             for target in ast_node.targets:
                 if hasattr(target, "id") == True:
                     name = target.id
-                    if not(name in globals_list):
+                    if name not in globals_list:
                         new_nodes.append(
                             PythonNode(
                                 name, 
@@ -1175,13 +1175,15 @@ def get_python_node_tree(python_code):
                         )
                         globals_list.append(name)
             return new_nodes
-        elif isinstance(ast_node, ast.AnnAssign) and (level == 0 or parent_node == None):
+        elif isinstance(ast_node, ast.AnnAssign) and (
+            level == 0 or parent_node is None
+        ):
             # Type annotated globals
             new_nodes = []
             target = ast_node.target
             if hasattr(target, "id") == True:
                 name = target.id
-                if not(name in globals_list):
+                if name not in globals_list:
                     new_nodes.append(
                         PythonNode(
                             name, 
@@ -1196,7 +1198,7 @@ def get_python_node_tree(python_code):
             # Globals can be nested somewhere deep in the AST, so they
             # are appended directly into the non-local python_node_tree list
             for name in ast_node.names:
-                if not(name in globals_list):
+                if name not in globals_list:
                     python_node_tree.append(
                         PythonNode(
                             name, 
@@ -1258,7 +1260,7 @@ def get_python_node_tree(python_code):
                 if new_nodes != []:
                     return new_nodes
         return new_node
-    
+
     # Initialization
     parsed_string = ast.parse(python_code)
     python_node_tree = []

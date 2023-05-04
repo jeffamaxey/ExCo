@@ -364,26 +364,27 @@ class DoubleButton(CustomButton):
     def extra_button_click(self, event):
         """mousePressEvent for the extra button"""
         #Execute the function if it was initialized
-        if self.extra_button_function != None:
-            try:
-                #Set focus to the last focused widget stored on the main form
-                if self.focus_last_widget == data.HexButtonFocus.TAB:
-                    self.main_form.last_focused_widget.currentWidget().setFocus()
-                elif self.focus_last_widget == data.HexButtonFocus.WINDOW:
-                    self.main_form.last_focused_widget.setFocus()
-                #Store the executed function for next cursor placement
-                self.main_form.view.last_executed_function_text = self.function_text
-                #Execute the buttons stored function
-                self.extra_button_function()
-            except Exception as ex:
-                print(ex)
-                message = "You need to focus one of the editor windows first!"
-                self.main_form.display.repl_display_message(
-                    message, 
-                    message_type=data.MessageType.ERROR
-                )
-            #Close the function wheel
-            self._parent.hide()
+        if self.extra_button_function is None:
+            return
+        try:
+            #Set focus to the last focused widget stored on the main form
+            if self.focus_last_widget == data.HexButtonFocus.TAB:
+                self.main_form.last_focused_widget.currentWidget().setFocus()
+            elif self.focus_last_widget == data.HexButtonFocus.WINDOW:
+                self.main_form.last_focused_widget.setFocus()
+            #Store the executed function for next cursor placement
+            self.main_form.view.last_executed_function_text = self.function_text
+            #Execute the buttons stored function
+            self.extra_button_function()
+        except Exception as ex:
+            print(ex)
+            message = "You need to focus one of the editor windows first!"
+            self.main_form.display.repl_display_message(
+                message, 
+                message_type=data.MessageType.ERROR
+            )
+        #Close the function wheel
+        self._parent.hide()
     
     def extra_button_enter_event(self, event):
         """Overloaded widget enter event"""

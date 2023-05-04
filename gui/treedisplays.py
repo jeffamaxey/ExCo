@@ -239,7 +239,7 @@ class TreeDisplay(data.QTreeView):
                 def update_cwd():
                     self.main_form.set_cwd(item.full_name)
                 cursor = data.QCursor.pos()
-                
+
                 if self.tree_menu != None:
                     self.tree_menu.setParent(None)
                     self.tree_menu = None
@@ -251,7 +251,7 @@ class TreeDisplay(data.QTreeView):
                 action_update_cwd.setIcon(icon)
                 self.tree_menu.addAction(action_update_cwd)
                 self.tree_menu.addSeparator()
-                
+
                 clipboard_copy_action = data.QAction("Copy directory name to clipboard", self)
                 def clipboard_copy():
                     cb = data.application.clipboard()
@@ -263,7 +263,7 @@ class TreeDisplay(data.QTreeView):
                 clipboard_copy_action.triggered.connect(clipboard_copy)
                 self.tree_menu.addAction(clipboard_copy_action)
                 self.tree_menu.addSeparator()
-                
+
                 if hasattr(item, "is_base") == True:
                     def update_to_parent():
                         parent_directory = os.path.abspath(
@@ -299,11 +299,11 @@ class TreeDisplay(data.QTreeView):
                 def open_file():
                     self.main_form.open_file(item.full_name)
                 cursor = data.QCursor.pos()
-                
+
                 if self.tree_menu != None:
                     self.tree_menu.setParent(None)
                     self.tree_menu = None
-                
+
                 self.tree_menu = Menu()
                 # Open in Ex.Co.
                 action_open_file = data.QAction("Open", self.tree_menu)
@@ -323,7 +323,7 @@ class TreeDisplay(data.QTreeView):
                 action_open.setIcon(icon)
                 self.tree_menu.addAction(action_open)
                 self.tree_menu.addSeparator()
-                
+
                 clipboard_copy_action = data.QAction("Copy file name to clipboard", self)
                 def clipboard_copy():
                     cb = data.application.clipboard()
@@ -335,7 +335,7 @@ class TreeDisplay(data.QTreeView):
                 clipboard_copy_action.triggered.connect(clipboard_copy)
                 self.tree_menu.addAction(clipboard_copy_action)
                 self.tree_menu.addSeparator()
-                
+
                 def update_to_parent():
                     directory = os.path.dirname(item.full_name)
                     self.main_form.set_cwd(directory)
@@ -347,12 +347,12 @@ class TreeDisplay(data.QTreeView):
                 action_update_to_parent.setIcon(icon)
                 self.tree_menu.addAction(action_update_to_parent)
                 self.tree_menu.popup(cursor)
-        
+
         elif self.tree_display_type == data.TreeDisplayType.NODES:
             def goto_item():
                 #Parse the node
                 self._node_item_parse(item)
-            
+
             def copy_node_to_clipboard():
                 try:
                     cb = data.application.clipboard()
@@ -360,23 +360,23 @@ class TreeDisplay(data.QTreeView):
                     cb.setText(item_text.split()[0], mode=cb.Clipboard)
                 except:
                     pass
-            
+
             def open_document():
                 #Focus the bound tab in its parent window
                 self.bound_tab._parent.setCurrentWidget(self.bound_tab)
-            
+
             item = self.model().itemFromIndex(model_index)
-            if item == None:
+            if item is None:
                 return
             item_text = item.text()
             cursor = data.QCursor.pos()
-            
+
             if self.tree_menu != None:
                 self.tree_menu.setParent(None)
                 self.tree_menu = None
-            
+
             self.tree_menu = Menu()
-            
+
             if (hasattr(item, "line_number") == True or "line:" in item_text):
                 action_goto_line = data.QAction("Goto node item", self.tree_menu)
                 action_goto_line.triggered.connect(goto_item)
@@ -434,7 +434,7 @@ class TreeDisplay(data.QTreeView):
     
     def _node_item_parse(self, item):
         # Check if the bound tab has been cleaned up and has no parent
-        if self.bound_tab == None or self.bound_tab._parent == None:
+        if self.bound_tab is None or self.bound_tab._parent is None:
             self.main_form.display.repl_display_message(
                 "The bound tab has been closed! Reload the tree display.", 
                 message_type=data.MessageType.ERROR

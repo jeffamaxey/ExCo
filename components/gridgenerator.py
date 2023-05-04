@@ -49,10 +49,8 @@ class GridGenerator:
         self.covered_positions = []
         self.add_position(self.first_position)
         self.current_direction = 1
-        if (grid_type != "circular" and 
-            grid_type != "trapezoid" and
-            grid_type != "rectangular"):
-                raise Exception("Unknown grid type specified!")
+        if grid_type not in ["circular", "trapezoid", "rectangular"]:
+            raise Exception("Unknown grid type specified!")
         elif grid_type == "trapezoid":
             self.grid_columns = grid_columns
             self.step_direction = "down-right"
@@ -63,7 +61,7 @@ class GridGenerator:
             self.rectangular_grid_row_addition = rectangular_grid_row_addition
             self.column_counter = 0
         self.grid_type = grid_type
-        
+
         self.scaling = in_scale
         self.edge_length = edge_length
         self.horizontal_step, self.vertical_step, self.steps = GridGenerator.init_steps(
@@ -103,7 +101,6 @@ class GridGenerator:
     
     def next_rectangular(self):
         self.column_counter += 1
-        spacing_step_x = 0
         spacing_step_y = 0
         spacing = (0, 0)
         if self.column_counter == self.grid_columns:
@@ -124,6 +121,7 @@ class GridGenerator:
                 self.step_direction = "up-right"
         else:
             current_step = self.steps[self.step_direction]
+            spacing_step_x = 0
             if self.step_direction == "down-right":
                 self.step_direction = "up-right"
                 spacing = (spacing_step_x, spacing_step_y)
@@ -171,7 +169,7 @@ class GridGenerator:
         )
         if new_position in self.covered_positions:
             current_direction = self.current_direction
-            for i in range(6):
+            for _ in range(6):
                 current_direction -= 1
                 if current_direction < 0:
                     current_direction = 5
@@ -181,13 +179,11 @@ class GridGenerator:
                     self.current_position[0] + current_step[0],
                     self.current_position[1] + current_step[1],
                 )
-                if not(new_position in self.covered_positions):
+                if new_position not in self.covered_positions:
                     break
-            self.add_position(new_position)
-            return self.get_position()
         else:
             self.current_direction += 1
             if self.current_direction > 5:
                 self.current_direction = 0
-            self.add_position(new_position)
-            return self.get_position()
+        self.add_position(new_position)
+        return self.get_position()

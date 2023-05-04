@@ -245,11 +245,11 @@ class CiCode(data.QsciLexerCustom):
         return "CiCode"
     
     def description(self, style):
-        if style < len(self.styles):
-            description = "Custom lexer for the CiCode programming languages"
-        else:
-            description = ""
-        return description
+        return (
+            "Custom lexer for the CiCode programming languages"
+            if style < len(self.styles)
+            else ""
+        )
     
     def defaultStyle(self):
         return self.styles["Default"]
@@ -301,7 +301,7 @@ class CiCode(data.QsciLexerCustom):
             (token.lower(), len(bytearray(token, "utf-8"))) 
                 for token in self.splitter.findall(text)
         ]
-        
+
         # Check if there is a style(comment, string, ...) stretching on from the previous line
         if start != 0:
             previous_style = editor.SendScintilla(editor.SCI_GETSTYLEAT, start - 1)
@@ -309,7 +309,7 @@ class CiCode(data.QsciLexerCustom):
                 if previous_style == i.style:
                     sequence = i
                     break
-        
+
         # Style the tokens accordingly
         for i, token in enumerate(tokens):
             token_name = token[0]
@@ -338,21 +338,20 @@ class CiCode(data.QsciLexerCustom):
                         else:
                             # Style the sequence and store the reference to it
                             sequence = i
-                            if i.add_to_style == True:
+                            if sequence.add_to_style == True:
                                 setStyling(token_length, sequence.style)
+                            elif token_name in self.keyword_list:
+                                setStyling(token_length, KEYWORD)
+                            elif token_name in self.type_list:
+                                setStyling(token_length, KEYWORD)
+                            elif token_name in self.operator_list:
+                                setStyling(token_length, OPERATOR)
+                            elif token_name[0].isdigit():
+                                setStyling(token_length, NUMBER)
+                            elif token_name in self.builtin_function_list:
+                                setStyling(token_length, BUILTINFUNCTION)
                             else:
-                                if token_name in self.keyword_list:
-                                    setStyling(token_length, KEYWORD)
-                                elif token_name in self.type_list:
-                                    setStyling(token_length, KEYWORD)
-                                elif token_name in self.operator_list:
-                                    setStyling(token_length, OPERATOR)
-                                elif token_name[0].isdigit():
-                                    setStyling(token_length, NUMBER)
-                                elif token_name in self.builtin_function_list:
-                                    setStyling(token_length, BUILTINFUNCTION)
-                                else:
-                                    setStyling(token_length, self.styles["Default"])
+                                setStyling(token_length, self.styles["Default"])
                         break
             elif token_name in self.keyword_list:
                 setStyling(token_length, KEYWORD)

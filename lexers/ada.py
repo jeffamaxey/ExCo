@@ -70,11 +70,7 @@ class Ada(data.QsciLexerCustom):
         return "Ada"
     
     def description(self, style):
-        if style <= 7:
-            description = "Custom lexer for the Ada programming languages"
-        else:
-            description = ""
-        return description
+        return "Custom lexer for the Ada programming languages" if style <= 7 else ""
     
     def set_theme(self, theme):
         for style in self.styles:
@@ -156,14 +152,14 @@ class Ada(data.QsciLexerCustom):
                     #Mark the procedure
                     if tokens[i+1][0] != ";":
                         pp_counter.append("PROCEDURE")
-                elif i > 1 and (tokens[i-2][0] == "package" or tokens[i-2][0] == "body"):
+                elif i > 1 and tokens[i - 2][0] in ["package", "body"]:
                     #Package name
                     setStyling(token[1], PAC)
                     #Mark the package
                     pp_counter.append("PACKAGE")
                 elif (i > 1 and tokens[i-2][0] == "end") and (len(tokens)-1 >= i+1):
                     #Package or procedure name end
-                    if len(pp_counter) > 0:
+                    if pp_counter:
                         if pp_counter.pop() == "PACKAGE":
                             setStyling(token[1], PAC)
                         else:

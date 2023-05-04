@@ -163,8 +163,6 @@ class SessionGuiManipulator(data.QTreeView):
             session = session_item.session
             #This is a call to the MainWindow class in the forms module
             self.main_form.sessions.restore(session.name, session.group)
-        elif session_item.type == self.ItemType.GROUP:
-            pass
     
     def _item_changed(self, item):
         """Callback connected to the displays QStandardItemModel 'itemChanged' signal"""
@@ -193,10 +191,7 @@ class SessionGuiManipulator(data.QTreeView):
                 self.main_form.sessions.update_menu()
                 #Display successful group deletion
                 group_name = item.session.group
-                if group_name == None:
-                    group_name = ""
-                else:
-                    group_name = " / ".join(group_name) + " / "
+                group_name = "" if group_name is None else " / ".join(group_name) + " / "
                 self.main_form.display.repl_display_message(
                     "Session '{:s}{:s}' was renamed to '{:s}{:s}'!".format(
                        group_name, 
@@ -231,56 +226,53 @@ class SessionGuiManipulator(data.QTreeView):
                 self.main_form.sessions.update_menu()
                 #Display successful group deletion
                 self.main_form.display.repl_display_message(
-                    "Group '{}' was renamed to '{}'!".format(
-                        old_group_name, 
-                        new_group_name
-                    ), 
-                    message_type=data.MessageType.SUCCESS
+                    f"Group '{old_group_name}' was renamed to '{new_group_name}'!",
+                    message_type=data.MessageType.SUCCESS,
                 )
                 #Refresh the session tree
                 self.refresh_display()
-        else:
-            if changed_item.type == self.ItemType.SESSION:
-                #Item is a session
+        elif changed_item.type == self.ItemType.SESSION:
+            #Item is a session
     #            session = changed_item.session
-                pass
-            elif changed_item.type == self.ItemType.GROUP:
-                #Item is a group
+            pass
+        elif changed_item.type == self.ItemType.GROUP:
+            #Item is a group
     #            group_name = changed_item.name
-                pass
-            elif changed_item.type == self.ItemType.EMPTY_SESSION:
-                #Store the session
-                session = changed_item.session
-                #Adjust the name to the new one, by getting the QLineEdit at the model index
-                session.name = self.indexWidget(item.index()).text()
-                #This is a call to the MainWindow class in the forms module
-                self.main_form.sessions.add(session.name, session.group)
-                #Refresh the session tree
-                self.refresh_display()
-                self.last_created_item = self.ItemType.EMPTY_SESSION
-            elif changed_item.type == self.ItemType.EMPTY_GROUP:
-                #Adjust the name to the new one, by getting the QLineEdit at the model index
-                group_name = self.indexWidget(item.index()).text()
+            pass
+        elif changed_item.type == self.ItemType.EMPTY_SESSION:
+            #Store the session
+            session = changed_item.session
+            #Adjust the name to the new one, by getting the QLineEdit at the model index
+            session.name = self.indexWidget(item.index()).text()
+            #This is a call to the MainWindow class in the forms module
+            self.main_form.sessions.add(session.name, session.group)
+            #Refresh the session tree
+            self.refresh_display()
+            self.last_created_item = self.ItemType.EMPTY_SESSION
+        elif changed_item.type == self.ItemType.EMPTY_GROUP:
+            #Adjust the name to the new one, by getting the QLineEdit at the model index
+            group_name = self.indexWidget(item.index()).text()
                 #When the item's name is change it refires the itemChanged signal,
                 #so a check of one of the properties is necessary to not repeat the operation
-                if item.name == None:
-                    item.name = group_name
-                    if hasattr(item, "parent_group") == True:
-                        item.name = (group_name, )
-                        if item.parent_group != None:
-                            item.name = item.parent_group + (group_name, )
-                    item.setEditable(False)
-                    #Display the warning
-                    message = "An empty group was created.\n"
-                    message += "A session must be added to it or the empty group will \n"
-                    message += "be deleted on the next refresh!"
-                    self.main_form.display.repl_display_message(
-                        message, 
-                        message_type=data.MessageType.WARNING
-                    )
-                    #Set the refresh lock, so it won't delete the empty group node
-                    self.refresh_lock = True
-                    self.last_created_item = self.ItemType.EMPTY_GROUP
+            if item.name is None:
+                item.name = group_name
+                if hasattr(item, "parent_group") == True:
+                    item.name = (group_name, )
+                    if item.parent_group != None:
+                        item.name = item.parent_group + (group_name, )
+                item.setEditable(False)
+                message = (
+                    "An empty group was created.\n"
+                    + "A session must be added to it or the empty group will \n"
+                )
+                message += "be deleted on the next refresh!"
+                self.main_form.display.repl_display_message(
+                    message, 
+                    message_type=data.MessageType.WARNING
+                )
+                #Set the refresh lock, so it won't delete the empty group node
+                self.refresh_lock = True
+                self.last_created_item = self.ItemType.EMPTY_GROUP
     
     def _item_editing_closed(self, widget):
         """Signal that fires when editing was canceled/ended in an empty session or empty group"""
@@ -294,11 +286,9 @@ class SessionGuiManipulator(data.QTreeView):
         #Reset the all locks/flags
         self.refresh_lock   = False
         self.edit_flag      = False
-        #Store which groups are expanded
-        expanded_groups = []
-        for group in self.groups:
-            if self.isExpanded(group.index()):
-                expanded_groups.append(group)
+        expanded_groups = [
+            group for group in self.groups if self.isExpanded(group.index())
+        ]
         #Remove the empty node by refreshing the session tree
         self.show_sessions()
         #Expand the groups that were expanded before
@@ -308,18 +298,13 @@ class SessionGuiManipulator(data.QTreeView):
                     self.expand(group.index())
     
     def _get_current_group(self):
-        if self.selectedIndexes() != []:
-            selected_item = self.tree_model.itemFromIndex(self.selectedIndexes()[0])
-            if selected_item.type == self.ItemType.SESSION:
-                if selected_item.session.group != None:
-                    return selected_item.parent()
-                else:
-                    return None
-            elif (selected_item.type == self.ItemType.GROUP or 
-                  selected_item.type == self.ItemType.EMPTY_GROUP):
-                return selected_item
-            else:
-                return None
+        if self.selectedIndexes() == []:
+            return None
+        selected_item = self.tree_model.itemFromIndex(self.selectedIndexes()[0])
+        if selected_item.type == self.ItemType.SESSION:
+            return selected_item.parent() if selected_item.session.group != None else None
+        elif selected_item.type in [self.ItemType.GROUP, self.ItemType.EMPTY_GROUP]:
+            return selected_item
         else:
             return None
     
@@ -402,12 +387,9 @@ class SessionGuiManipulator(data.QTreeView):
         if selected_item.type == self.ItemType.GROUP:
             remove_group = selected_item.name
             # Adjust the group name string
-            if remove_group == None:
+            if remove_group is None:
                 selected_item.name = ""
-            remove_group_name = ""
-            if remove_group != "":
-                remove_group_name = "/".join(remove_group) + "/"
-            
+            remove_group_name = "/".join(remove_group) + "/" if remove_group != "" else ""
             # First add all of the groups, if any
             groups = self.settings_manipulator.get_sorted_groups()
             # Check if the group has subgroups
@@ -417,13 +399,17 @@ class SessionGuiManipulator(data.QTreeView):
             current_group = selected_item.name
             for group in groups:
                 if (len(group) > len(remove_group)) and (set(remove_group).issubset(group)):
-                    message =  "Cannot delete group\n'{:s}'\n".format(remove_group_name)
-                    message += "because it contains subgroups!"
+                    message = (
+                        "Cannot delete group\n'{:s}'\n".format(remove_group_name)
+                        + "because it contains subgroups!"
+                    )
                     reply = OkDialog.error(message)
                     return
-            
-            message =  "Are you sure you want to delete group:\n"
-            message += "'{:s}' ?".format(remove_group_name)
+
+            message = (
+                "Are you sure you want to delete group:\n"
+                + "'{:s}' ?".format(remove_group_name)
+            )
             reply = YesNoDialog.warning(message)
             if reply == data.QMessageBox.No:
                 return
@@ -436,8 +422,10 @@ class SessionGuiManipulator(data.QTreeView):
                     message_type=data.MessageType.SUCCESS
                 )
             else:
-                message = "An error occured while deleting session "
-                message += "group '{:s}'!".format(remove_group_name)
+                message = (
+                    "An error occured while deleting session "
+                    + "group '{:s}'!".format(remove_group_name)
+                )
                 self.main_form.display.repl_display_message(
                     message, 
                     message_type=data.MessageType.ERROR
@@ -447,13 +435,15 @@ class SessionGuiManipulator(data.QTreeView):
         elif selected_item.type == self.ItemType.SESSION:
             remove_session = selected_item.session
             # Adjust the group name string
-            if remove_session.group == None:
+            if remove_session.group is None:
                 remove_session.group = ""
             group_name = ""
             if remove_session.group != "":
                 group_name = "/".join(remove_session.group) + "/"
-            message =  "Are you sure you want to delete session:\n"
-            message += "'{:s}{:s}' ?".format(group_name, remove_session.name)
+            message = (
+                "Are you sure you want to delete session:\n"
+                + "'{:s}{:s}' ?".format(group_name, remove_session.name)
+            )
             reply = YesNoDialog.warning(message)
             if reply == data.QMessageBox.No:
                 return
@@ -516,7 +506,7 @@ class SessionGuiManipulator(data.QTreeView):
             return
         selected_item = self.tree_model.itemFromIndex(self.selectedIndexes()[0])
         #Check the selected item type
-        if selected_item.type == self.ItemType.GROUP or selected_item.type == self.ItemType.SESSION:
+        if selected_item.type in [self.ItemType.GROUP, self.ItemType.SESSION]:
             selected_item.setEditable(True)
             self.edit(selected_item.index())
         #Add the session signal when editing is canceled
@@ -547,10 +537,9 @@ class SessionGuiManipulator(data.QTreeView):
         )
         for group in groups:
             current_node = main_group
-            level_counter = 1
-            for folder in group:
+            for level_counter, folder in enumerate(group, start=1):
                 new_group = current_node.subgroup_get(folder)
-                if new_group == None:
+                if new_group is None:
                     item_group_node = self.SessionItem(folder)
                     item_group_node.setFont(font)
                     item_group_node.my_parent   = self
@@ -562,7 +551,6 @@ class SessionGuiManipulator(data.QTreeView):
                     current_node.reference.appendRow(item_group_node)
                 current_node = current_node.subgroup_create(folder, item_group_node)
                 self.groups.append(item_group_node)
-                level_counter += 1
         #Initialize the list of session nodes
         self.session_nodes = []
         #Loop through the manipulators sessions and add them to the display

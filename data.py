@@ -9,6 +9,7 @@ For more information check the 'LICENSE.txt' file.
 For complete license information of the dependencies, check the 'additional_licenses' directory.
 """
 
+
 ##  FILE DESCRIPTION:
 ##      Module that holds objects that will be used across modules.
 
@@ -39,22 +40,22 @@ try:
     import PyQt5.QtGui
     import PyQt5.QtWidgets
     PyQt = PyQt5
-    from PyQt5.Qsci import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtGui import *
-    from PyQt5.QtWidgets import *
+    from PyQt.Qsci import *
+    from PyQt.QtCore import *
+    from PyQt.QtGui import *
+    from PyQt.QtWidgets import *
     PYQT_MODE = 5
 except:
     import PyQt4.Qsci
     import PyQt4.QtCore
     import PyQt4.QtGui
     PyQt = PyQt4
-    from PyQt4.Qsci import *
-    from PyQt4.QtCore import *
-    from PyQt4.QtGui import *
+    from PyQt.Qsci import *
+    from PyQt.QtCore import *
+    from PyQt.QtGui import *
     PYQT_MODE = 4
 # Safety check for PyQt mode selection
-if PYQT_MODE != 4 and PYQT_MODE != 5:
+if PYQT_MODE not in [4, 5]:
     raise Exception("PyQt mode has to be either 4 or 5!")
 
 
@@ -201,9 +202,7 @@ settings_directory = os.path.join(home_directory, ".exco") \
 # Global string variable for the current platform name ("Windows", "Linux", ...),
 # and a flag if running on the Raspberry PI
 platform = platform.system()
-on_rpi = False
-if os.name == "posix":
-    on_rpi = (os.uname()[1] == "raspberrypi")
+on_rpi = (os.uname()[1] == "raspberrypi") if os.name == "posix" else False
 # User configuration file
 config_file = os.path.join(settings_directory,  "userfunctions.cfg") \
     .replace('\\', '/')
@@ -308,8 +307,8 @@ global_function_information = {}
 
 # Show PyQt/QScintilla version that is being used and if running in 
 # QScintilla compatibility mode
-LIBRARY_VERSIONS = "PyQt" + PyQt.QtCore.PYQT_VERSION_STR
-LIBRARY_VERSIONS += " / QScintilla" + PyQt.Qsci.QSCINTILLA_VERSION_STR
+LIBRARY_VERSIONS = f"PyQt{PyQt.QtCore.PYQT_VERSION_STR}"
+LIBRARY_VERSIONS += f" / QScintilla{PyQt.Qsci.QSCINTILLA_VERSION_STR}"
 if compatibility_mode == True:
     LIBRARY_VERSIONS += "(Compatibility mode)"
 

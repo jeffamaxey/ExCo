@@ -10,6 +10,7 @@ For complete license information of the dependencies, check the 'additional_lice
 """
 
 
+
 ##  FILE DESCRIPTION:
 ##      'lexer' package initialization
 
@@ -50,43 +51,45 @@ predefined_lexers = [
 missing_themes = {}
 # Loop through the Qsci module lexers and adjust them
 for i in data.__dict__.keys():
-    if i.startswith("QsciLexer") and len(i) > len("QsciLexer"):
-        if not(i in predefined_lexers):
-            lexer_name = i.replace("QsciLexer", "")
-            styles = {}
-            cls = getattr(data, i)
-            for j in dir(cls):
-                att_value = getattr(cls, j)
-                if j[0].isupper() == True and isinstance(att_value, int):
-                    styles[j] = att_value
-            cls_text = "class {0}(data.{1}):\n".format(lexer_name, i)
-            cls_text += "    styles = {\n"
-            for style in styles:
-                cls_text += "        \"{0}\" : {1},\n".format(style, styles[style])
-            cls_text += "    }\n"
-            cls_text += "    \n"
-            cls_text += "    def __init__(self, parent=None):\n"
-            cls_text += "        super().__init__()\n"
-            cls_text += "        self.set_theme(data.theme)\n"
-            cls_text += "    \n"
-            cls_text += "    def set_theme(self, theme):\n"
-            cls_text += "        self.setDefaultColor(theme.Font.Default)\n".format(lexer_name)
-            cls_text += "        self.setDefaultPaper(theme.Paper.Default)\n".format(lexer_name)
-            cls_text += "        missing_themes['{}'] = []\n".format(lexer_name)
-            for style in styles:
-                cls_text += "        for style in self.styles.keys():\n"
-                cls_text += "            try:\n"
-                cls_text += "                self.setPaper(\n"
-                cls_text += "                    data.QColor(theme.Paper.{0}.Default), \n".format(lexer_name)
-                cls_text += "                    self.styles[style]\n"
-                cls_text += "                )\n"
-                cls_text += "                lexers.set_font(self, style, getattr(theme.Font.{0}, style))\n".format(lexer_name)
-                cls_text += "            except:\n"
-                cls_text += "               if not(style in missing_themes['{}']):\n".format(lexer_name)
-                cls_text += "                   missing_themes['{}'].append(style)\n".format(lexer_name)
-                cls_text += "        if len(missing_themes['{}']) != 0:\n".format(lexer_name)
-                cls_text += "            print(\"Lexer '{}' missing themes:\")\n".format(lexer_name)
-                cls_text += "            for mt in missing_themes['{}']:\n".format(lexer_name)
-                cls_text += "                print('    - ' + mt)\n"
-                cls_text += "            raise Exception(\"Lexer '{}' has missing themes!\")\n".format(lexer_name)
-            exec(cls_text)
+    if (
+        i.startswith("QsciLexer")
+        and len(i) > len("QsciLexer")
+        and i not in predefined_lexers
+    ):
+        lexer_name = i.replace("QsciLexer", "")
+        styles = {}
+        cls = getattr(data, i)
+        for j in dir(cls):
+            att_value = getattr(cls, j)
+            if j[0].isupper() == True and isinstance(att_value, int):
+                styles[j] = att_value
+        cls_text = "class {0}(data.{1}):\n".format(lexer_name, i) + "    styles = {\n"
+        for style, value in styles.items():
+            cls_text += "        \"{0}\" : {1},\n".format(style, value)
+        cls_text += "    }\n"
+        cls_text += "    \n"
+        cls_text += "    def __init__(self, parent=None):\n"
+        cls_text += "        super().__init__()\n"
+        cls_text += "        self.set_theme(data.theme)\n"
+        cls_text += "    \n"
+        cls_text += "    def set_theme(self, theme):\n"
+        cls_text += "        self.setDefaultColor(theme.Font.Default)\n".format(lexer_name)
+        cls_text += "        self.setDefaultPaper(theme.Paper.Default)\n".format(lexer_name)
+        cls_text += f"        missing_themes['{lexer_name}'] = []\n"
+        for _ in styles:
+            cls_text += "        for style in self.styles.keys():\n"
+            cls_text += "            try:\n"
+            cls_text += "                self.setPaper(\n"
+            cls_text += "                    data.QColor(theme.Paper.{0}.Default), \n".format(lexer_name)
+            cls_text += "                    self.styles[style]\n"
+            cls_text += "                )\n"
+            cls_text += "                lexers.set_font(self, style, getattr(theme.Font.{0}, style))\n".format(lexer_name)
+            cls_text += "            except:\n"
+            cls_text += f"               if not(style in missing_themes['{lexer_name}']):\n"
+            cls_text += f"                   missing_themes['{lexer_name}'].append(style)\n"
+            cls_text += f"        if len(missing_themes['{lexer_name}']) != 0:\n"
+            cls_text += f"""            print(\"Lexer '{lexer_name}' missing themes:\")\n"""
+            cls_text += f"            for mt in missing_themes['{lexer_name}']:\n"
+            cls_text += "                print('    - ' + mt)\n"
+            cls_text += f"""            raise Exception(\"Lexer '{lexer_name}' has missing themes!\")\n"""
+        exec(cls_text)

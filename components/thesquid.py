@@ -49,11 +49,11 @@ class TheSquid:
     
     @staticmethod
     def update_styles():
-        if TheSquid.main_form == None:
+        if TheSquid.main_form is None:
             # Do not update if the main form is not initialized
             return
         TheSquid.update_objects()
-        
+
         TheSquid.customize_menu_style(TheSquid.main_form.menubar)
         if data.custom_menu_font != None:
             for action in TheSquid.main_form.menubar.stored_actions:
@@ -62,7 +62,7 @@ class TheSquid:
         TheSquid.customize_menu_style(TheSquid.main_form.recent_files_menu)
         TheSquid.customize_menu_style(TheSquid.main_form.save_in_encoding)
         TheSquid.customize_menu_style(TheSquid.main_form.bookmark_menu)
-        
+
         def set_style(menu):
             if hasattr(menu, "actions"):
                 TheSquid.customize_menu_style(menu)
@@ -70,17 +70,18 @@ class TheSquid:
                     if item.menu() != None:
                         TheSquid.customize_menu_style(item.menu())
                         set_style(item)
+
         set_style(TheSquid.main_form.sessions_menu)
-        
+
         windows = [
             TheSquid.main_window,
             TheSquid.upper_window,
             TheSquid.lower_window
         ]
-        
+
         for window in windows:
             window.customize_tab_bar()
-        
+
             for i in range(window.count()):
                 if hasattr(window.widget(i), "corner_widget"):
                     TheSquid.customize_menu_style(
@@ -103,19 +104,19 @@ class TheSquid:
     
     @staticmethod
     def customize_menu_style(menu):
-        if data.custom_menu_scale != None and data.custom_menu_font != None:
+        if data.custom_menu_scale is None or data.custom_menu_font is None:
+            # Reset the style
+            menu.setStyle(data.QApplication.style())
+        else:
             # Customize the style
             try:
                 default_style_name = data.QApplication.style().objectName()
                 custom_style = CustomStyle(default_style_name)
                 menu.setStyle(custom_style)
             except:
-                if data.platform == "Windows":
-                    custom_style = CustomStyle("Windows")
-                    menu.setStyle(custom_style)
-                else:
-                    custom_style = CustomStyle("GTK")
-                    menu.setStyle(custom_style)
-        else:
-            # Reset the style
-            menu.setStyle(data.QApplication.style())
+                custom_style = (
+                    CustomStyle("Windows")
+                    if data.platform == "Windows"
+                    else CustomStyle("GTK")
+                )
+                menu.setStyle(custom_style)

@@ -23,7 +23,7 @@ class StyleSheetScrollbar:
         color_background = data.theme.ScrollBar.background
         color_handle = data.theme.ScrollBar.handle
         color_handle_hover = data.theme.ScrollBar.handle_hover
-        style_sheet = """
+        return """
             QScrollBar:horizontal {{
                 border: none;
                 background: {};
@@ -55,7 +55,6 @@ class StyleSheetScrollbar:
             color_handle_hover,
             color_handle_hover,
         )
-        return style_sheet
     
     @staticmethod
     def vertical():
@@ -64,7 +63,7 @@ class StyleSheetScrollbar:
         color_background = data.theme.ScrollBar.background
         color_handle = data.theme.ScrollBar.handle
         color_handle_hover = data.theme.ScrollBar.handle_hover
-        style_sheet = """
+        return """
             QScrollBar:vertical {{
                 border: none;
                 background: {};
@@ -95,14 +94,8 @@ class StyleSheetScrollbar:
             color_handle,
             color_handle_hover,
             color_handle_hover,
-            
         )
-        return style_sheet
     
     @staticmethod
     def full():
-        style_sheet = (
-            StyleSheetScrollbar.horizontal() +
-            StyleSheetScrollbar.vertical()
-        )
-        return style_sheet
+        return StyleSheetScrollbar.horizontal() + StyleSheetScrollbar.vertical()

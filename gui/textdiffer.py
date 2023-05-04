@@ -179,6 +179,7 @@ class TextDiffer(data.QWidget):
                 self.focused_editor = focused_editor
                 function_to_decorate(*args, **kwargs)
             return decorated_function
+
         self.editor_1.mousePressEvent = focus_decorator(
             self.editor_1.mousePressEvent,
             self.editor_1
@@ -208,7 +209,7 @@ class TextDiffer(data.QWidget):
         # to the child editor
         self._init_editor_functions()
         # Check the text validity
-        if text_1 == None or text_2 == None:
+        if text_1 is None or text_2 is None:
             #One of the texts is unspecified
             return
         # Create the diff
@@ -580,9 +581,6 @@ class TextDiffer(data.QWidget):
                             + ...
                             ? ...
                         """
-                        #Lines have only a few character difference, skip the 
-                        #first '?' and handle the next '?' as a "'- '/'+ '/'? '" sequence
-                        pass
                     elif list_sum[i-1].startswith("- "):
                         #Line in text 1 has something added
                         """
@@ -592,7 +590,7 @@ class TextDiffer(data.QWidget):
                             + ...
                         """
                         line_styling_1[len(line_numbering_1) - 1] = self.INDICATOR_SIMILAR
-                        
+
                         list_2.pop()
                         line_numbering_2.pop()
                         line_styling_2.pop()
@@ -609,7 +607,7 @@ class TextDiffer(data.QWidget):
                         line_numbering_1.pop()
                         line_styling_1.pop()
                         line_styling_1[len(line_numbering_1) - 1] = self.INDICATOR_SIMILAR
-                        
+
                         pop_index_2 = (len(line_numbering_2) - 1) - 1
                         list_2.pop(pop_index_2)
                         line_numbering_2.pop(pop_index_2)
@@ -643,7 +641,7 @@ class TextDiffer(data.QWidget):
                     self.editor_2.markerAdd(i, self.marker_unique_2)
                     self.editor_2.markerAdd(i, self.marker_unique_symbol_2)
         #Check if there were any differences
-        if (any(line_styling_1) == False and any(line_styling_2) == False):
+        if not any(line_styling_1) and not any(line_styling_2):
             self.main_form.display.repl_display_message(
                 "No differences between texts.", 
                 message_type=data.MessageType.SUCCESS
@@ -659,14 +657,11 @@ class TextDiffer(data.QWidget):
                         similarity_counter += 1
                     else:
                         difference_counter_1 += 1
-            difference_counter_2 = 0
-            for diff in line_styling_2:
-                if diff != None:
-                    if diff == self.INDICATOR_SIMILAR:
-                        #Skip the similar line, which were already counter above
-                        continue
-                    else:
-                        difference_counter_2 += 1
+            difference_counter_2 = sum(
+                1
+                for diff in line_styling_2
+                if diff not in [None, self.INDICATOR_SIMILAR]
+            )
             #Display the differences/similarities messages
             self.main_form.display.repl_display_message(
                 "{:d} differences found in '{:s}'!".format(difference_counter_1, self.text_1_name), 

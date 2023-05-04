@@ -68,11 +68,11 @@ class RouterOS(data.QsciLexerCustom):
         return "RouterOS"
     
     def description(self, style):
-        if style < len(self.styles):
-            description = "Custom lexer for the RouterOS syntax by MikroTik"
-        else:
-            description = ""
-        return description
+        return (
+            "Custom lexer for the RouterOS syntax by MikroTik"
+            if style < len(self.styles)
+            else ""
+        )
     
     def defaultStyle(self):
         return self.styles["Default"]
@@ -127,7 +127,7 @@ class RouterOS(data.QsciLexerCustom):
         commenting          = False
         tokens = [(token, len(bytearray(token, "utf-8"))) for token in self.splitter.findall(text)]
         #Style the tokens accordingly
-        for i, token in enumerate(tokens):
+        for token in tokens:
             if commenting == True:
                 #Continuation of comment
                 setStyling(token[1], COMMENT)

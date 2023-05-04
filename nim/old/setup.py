@@ -5,12 +5,8 @@
 import os
 from distutils.core import setup, Extension
 
-nim_c_files = []
 items = os.listdir("nimcache/")
-for i in items:
-    if i.endswith(".c"):
-        nim_c_files.append("nimcache/" + i)
-
+nim_c_files = [f"nimcache/{i}" for i in items if i.endswith(".c")]
 nim_lexers = Extension(
     'nim_lexers', 
     nim_c_files,

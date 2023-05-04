@@ -167,7 +167,7 @@ class YesNoDialog(data.QDialog):
         )
         painter.end()
         original_dialog_image = data.QPixmap.fromImage(back_image)
-        
+
         # Now add the images according to the type of dialog
         dialog_image = original_dialog_image.scaled(
             original_dialog_image.size() * self.scale,
@@ -243,11 +243,7 @@ class YesNoDialog(data.QDialog):
         self.label.setWordWrap(True)
         self.label.setAlignment(data.Qt.AlignCenter)
         self.label.setStyleSheet(
-            'color: rgb({}, {}, {})'.format(
-                data.theme.Font.Default.red(),
-                data.theme.Font.Default.green(),
-                data.theme.Font.Default.blue(),
-            )
+            f'color: rgb({data.theme.Font.Default.red()}, {data.theme.Font.Default.green()}, {data.theme.Font.Default.blue()})'
         )
         self.label.setText(text)
         width_diff = self.image.rect().width() - original_dialog_image.width()
@@ -344,7 +340,7 @@ class YesNoDialog(data.QDialog):
             "border:0;" +
             "background-color:transparent;"
         )
-        
+
         self.setGeometry(dialog_image.rect())
         self.center()
         self.setWindowFlags(data.Qt.FramelessWindowHint)
@@ -402,7 +398,7 @@ class YesNoDialog(data.QDialog):
             self.state_off()
         elif pressed_key == data.Qt.Key_Up:
             self.state_on()
-        elif pressed_key == data.Qt.Key_Enter or pressed_key == data.Qt.Key_Return:
+        elif pressed_key in [data.Qt.Key_Enter, data.Qt.Key_Return]:
             if self.state == True:
                 self.done(data.QMessageBox.Yes)
             elif self.state == False:
@@ -453,7 +449,7 @@ class OkDialog(YesNoDialog):
         )
         painter.end()
         original_dialog_image = data.QPixmap.fromImage(back_image)
-        
+
         # Now add the images according to the type of dialog
         dialog_image = original_dialog_image.scaled(
             original_dialog_image.size() * self.scale,
@@ -529,11 +525,7 @@ class OkDialog(YesNoDialog):
         self.label.setWordWrap(True)
         self.label.setAlignment(data.Qt.AlignCenter)
         self.label.setStyleSheet(
-            'color: rgb({}, {}, {})'.format(
-                data.theme.Font.Default.red(),
-                data.theme.Font.Default.green(),
-                data.theme.Font.Default.blue(),
-            )
+            f'color: rgb({data.theme.Font.Default.red()}, {data.theme.Font.Default.green()}, {data.theme.Font.Default.blue()})'
         )
         self.label.setText(text)
         width_diff = self.image.rect().width() - original_dialog_image.width()
@@ -610,7 +602,7 @@ class OkDialog(YesNoDialog):
             "border:0;" +
             "background-color:transparent;"
         )
-        
+
         self.setGeometry(dialog_image.rect())
         self.center()
         self.setWindowFlags(data.Qt.FramelessWindowHint)
@@ -628,6 +620,5 @@ class OkDialog(YesNoDialog):
             self.done(data.QMessageBox.No)
         elif pressed_key == data.Qt.Key_Down:
             self.state_off()
-        # Check for Enter/Return keypress
-        elif pressed_key == data.Qt.Key_Enter or pressed_key == data.Qt.Key_Return:
+        elif pressed_key in [data.Qt.Key_Enter, data.Qt.Key_Return]:
             self.done(data.QMessageBox.No)

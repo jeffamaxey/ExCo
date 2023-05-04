@@ -99,12 +99,9 @@ class MessageLogger(data.QWidget):
         
     def append_message(self, *args, **kwargs):
         """Adds a message as a string to the log display if logging mode is enabled"""
-        if len(args) > 1:
-            message = " ".join(args)
-        else:
-            message = args[0]
+        message = " ".join(args) if len(args) > 1 else args[0]
         #Check if message is a string class, if not then make it a string
-        if isinstance(message, str) == False:
+        if not isinstance(message, str):
             message = str(message)
         #Check if logging mode is enabled
         if data.logging_mode == True:

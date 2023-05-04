@@ -176,7 +176,7 @@ class CustomInterpreter(code.InteractiveInterpreter):
         super().__init__(initial_references)
         #Import all the default modules
         for mod in self.modules:
-            self.eval_command("import " + mod)
+            self.eval_command(f"import {mod}")
         #Save the REPL print function as a reference
         self.repl_print = repl_print
     
@@ -194,8 +194,8 @@ class CustomInterpreter(code.InteractiveInterpreter):
             #Remove the literal sequences from the command
             filtered_command = filtered_command.replace(self.re_escape_sequence, "")
             data.print_log("------------------")
-            data.print_log(">>> " + command)
-            data.print_log(">> " + filtered_command)
+            data.print_log(f">>> {command}")
+            data.print_log(f">> {filtered_command}")
             #Execute the filtered command string with the custom InteractiveInterpreter
             #First try to evaluate the command string, to see if it's an expression
             try:
@@ -305,7 +305,9 @@ class CustomInterpreter(code.InteractiveInterpreter):
                         "subprocess.Popen(command)"
                     ]
                 else:
-                    process_commands = ["subprocess.Popen(['cmd.exe', '/c', '" + command + " & pause'])"]
+                    process_commands = [
+                        f"subprocess.Popen(['cmd.exe', '/c', '{command} & pause'])"
+                    ]
             else:
                 if output_to_repl == True:
                     options = 'startupinfo=startupinfo, stdout=subprocess.PIPE, stderr=subprocess.STDOUT'
@@ -314,11 +316,13 @@ class CustomInterpreter(code.InteractiveInterpreter):
                         sub_call = 'subprocess.Popen(\'cmd.exe /c {:s}\', {:s})'.format(command, options)
                     else:
                         sub_call = 'subprocess.Popen(["cmd.exe", "/c", "{:s}"], {:s})'.format(command, options)
-                    process_commands = ['startupinfo = subprocess.STARTUPINFO()', 
-                                        'startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW',
-                                        'result = ' + sub_call, 
-                                        '(output, err) = result.communicate()',
-                                        'print(output)']
+                    process_commands = [
+                        'startupinfo = subprocess.STARTUPINFO()',
+                        'startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW',
+                        f'result = {sub_call}',
+                        '(output, err) = result.communicate()',
+                        'print(output)',
+                    ]
                 else:
                     options     = 'startupinfo=startupinfo, stdout=subprocess.PIPE, stderr=subprocess.STDOUT'
                     #Double quotes have to be handled differently on Windows (don't know about Linux yet)
@@ -340,6 +344,7 @@ class CustomInterpreter(code.InteractiveInterpreter):
                         result = self.eval_command(command)
                         if result != None:
                             return
+
                 #Start the new thread
                 thread = threading.Thread(target=threaded_function, args=(process_commands, ))
                 thread.start()
@@ -360,7 +365,7 @@ class CustomInterpreter(code.InteractiveInterpreter):
                             end_delimiter_string, 
                             end_message_string
                         )
-    
+
                     ]
                 else:
                     # Others terminals like XTerm
@@ -380,14 +385,18 @@ class CustomInterpreter(code.InteractiveInterpreter):
                 if output_to_repl == True:
                     options     = 'stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True'
                     sub_call    = 'subprocess.Popen("{:s}", {:s})'.format(command, options)
-                    process_commands =  ['result = ' + sub_call,
-                                         '(output, err) = result.communicate()',
-                                         'print(output)']
+                    process_commands = [
+                        f'result = {sub_call}',
+                        '(output, err) = result.communicate()',
+                        'print(output)',
+                    ]
                 else:
                     options     = 'stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False'
                     sub_call    = 'subprocess.Popen("{:s}", {:s})'.format(command, options)
-                    process_commands =  ['result = ' + sub_call,
-                                         '(output, err) = result.communicate()']
+                    process_commands = [
+                        f'result = {sub_call}',
+                        '(output, err) = result.communicate()',
+                    ]
         #Run the commands sequentially and check the result
         for cmd in process_commands:
             result = self.eval_command(cmd)
@@ -415,9 +424,8 @@ class CustomInterpreter(code.InteractiveInterpreter):
                 subprocess.Popen([data.terminal])
             except Exception as ex:
                 self.repl_print(
-                    "Error creating a '{}' terminal!".format(data.terminal) +
-                    "To change the terminal application, edit the user settings.",
-                    data.MessageType.ERROR
+                    f"Error creating a '{data.terminal}' terminal!To change the terminal application, edit the user settings.",
+                    data.MessageType.ERROR,
                 )
     
     def get_default_references(self):
@@ -428,5 +436,5 @@ class CustomInterpreter(code.InteractiveInterpreter):
             terminal        = self.create_terminal, 
         )
         #Extend the dictionary with the constants dictionary
-        reference_list.update(self.dict_const_references)
+        reference_list |= self.dict_const_references
         return reference_list

@@ -32,7 +32,7 @@ def set_font(lexer, style_name, style_options):
         style_index
     )
     weight = data.QFont.Normal
-    if bold == 1 or bold == True:
+    if bold in [1, True]:
         weight = data.QFont.Bold
     elif bold == 2:
         weight = data.QFont.Black
@@ -49,7 +49,7 @@ def set_font_new(lexer, style_name, style_options):
         style_index
     )
     weight = data.QFont.Normal
-    if bold == 1 or bold == True:
+    if bold in [1, True]:
         weight = data.QFont.Bold
     elif bold == 2:
         weight = data.QFont.Black
@@ -62,71 +62,71 @@ def set_font_new(lexer, style_name, style_options):
 def get_lexer_from_file_type(file_type):
     current_file_type = file_type
     lexer = None
-    if file_type == "python":
+    if current_file_type == "python":
         if lexers.nim_lexers_found == True:
             lexer = lexers.CustomPython()
         else:
             lexer = lexers.Python()
-    elif file_type == "cython":
+    elif current_file_type == "cython":
         lexer = lexers.Cython()
-    elif file_type == "c":
+    elif current_file_type == "c":
         lexer = lexers.CPP()
-    elif file_type == "c++":
+    elif current_file_type == "c++":
         lexer = lexers.CPP()
-    elif file_type == "pascal":
+    elif current_file_type == "pascal":
         lexer = lexers.Pascal()
-    elif file_type == "oberon/modula":
+    elif current_file_type == "oberon/modula":
         lexer = lexers.Oberon()
-    elif file_type == "ada":
+    elif current_file_type == "ada":
         lexer = lexers.Ada()
-    elif file_type == "d":
+    elif current_file_type == "d":
         lexer = lexers.D()
-    elif file_type == "nim":
+    elif current_file_type == "nim":
         lexer = lexers.Nim()
-    elif file_type == "makefile":
+    elif current_file_type == "makefile":
         lexer = lexers.Makefile()
-    elif file_type == "xml":
+    elif current_file_type == "xml":
         lexer = lexers.XML()
-    elif file_type == "batch":
+    elif current_file_type == "batch":
         lexer = lexers.Batch()
-    elif file_type == "bash":
+    elif current_file_type == "bash":
         lexer = lexers.Bash()
-    elif file_type == "lua":
+    elif current_file_type == "lua":
         lexer = lexers.Lua()
-    elif file_type == "coffeescript":
+    elif current_file_type == "coffeescript":
         if data.compatibility_mode == False:
             lexer = lexers.CoffeeScript()
         else:
             lexer = lexers.Text()
-    elif file_type == "c#":
+    elif current_file_type == "c#":
         lexer = lexers.CPP()
-    elif file_type == "java":
+    elif current_file_type == "java":
         lexer = lexers.Java()
-    elif file_type == "javascript":
+    elif current_file_type == "javascript":
         lexer = lexers.JavaScript()
-    elif file_type == "octave":
+    elif current_file_type == "octave":
         lexer = lexers.Octave()
-    elif file_type == "routeros":
+    elif current_file_type == "routeros":
         lexer = lexers.RouterOS()
-    elif file_type == "sql":
+    elif current_file_type == "sql":
         lexer = lexers.SQL()
-    elif file_type == "postscript":
+    elif current_file_type == "postscript":
         lexer = lexers.PostScript()
-    elif file_type == "fortran":
+    elif current_file_type == "fortran":
         lexer = lexers.Fortran()
-    elif file_type == "fortran77":
+    elif current_file_type == "fortran77":
         lexer = lexers.Fortran77()
-    elif file_type == "idl":
+    elif current_file_type == "idl":
         lexer = lexers.IDL()
-    elif file_type == "ruby":
+    elif current_file_type == "ruby":
         lexer = lexers.Ruby()
-    elif file_type == "html":
+    elif current_file_type == "html":
         lexer = lexers.HTML()
-    elif file_type == "css":
+    elif current_file_type == "css":
         lexer = lexers.CSS()
-    elif file_type == "awk":
+    elif current_file_type == "awk":
         lexer = lexers.AWK()
-    elif file_type == "cicode":
+    elif current_file_type == "cicode":
         lexer = lexers.CiCode()
     else:
         #No lexer was chosen, set file type to text and lexer to plain text

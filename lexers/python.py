@@ -50,10 +50,9 @@ class Python(data.QsciLexerPython):
         #Initialize list with keywords
         built_ins = keyword.kwlist
         for i in builtins.__dict__.keys():
-            if not(i in built_ins):
+            if i not in built_ins:
                 built_ins.append(i)
-        self._kwrds = list(set(built_ins + additional_keywords))
-        self._kwrds.sort()
+        self._kwrds = sorted(set(built_ins + additional_keywords))
         #Transform list into a single string with spaces between list items
         self._kwrds = " ".join(self._kwrds)
     
@@ -71,10 +70,7 @@ class Python(data.QsciLexerPython):
         read the QScintilla QsciLexer class documentation on the Riverbank website.
         """
         #Only state 1 returns keywords, don't know why? Check the C++ Scintilla lexer source files.
-        if state == 1:
-            return self._kwrds
-        else:
-            return None
+        return self._kwrds if state == 1 else None
 
 
 class CustomPython(data.QsciLexerCustom):
@@ -167,11 +163,11 @@ class CustomPython(data.QsciLexerCustom):
         return "Python"
     
     def description(self, style):
-        if style <= 16:
-            description = "Custom lexer for the Python programming languages"
-        else:
-            description = ""
-        return description
+        return (
+            "Custom lexer for the Python programming languages"
+            if style <= 16
+            else ""
+        )
     
     def defaultStyle(self):
         return self.styles["Default"]
@@ -223,7 +219,7 @@ class CustomPython(data.QsciLexerCustom):
                     if previous_style == i.style:
                         sequence = i
                         break
-            
+
             # Style the tokens accordingly
             for i, token in enumerate(tokens):
 #                print(token[0].encode("utf-8"))
@@ -253,15 +249,14 @@ class CustomPython(data.QsciLexerCustom):
                             else:
                                 # Style the sequence and store the reference to it
                                 sequence = i
-                                if i.add_to_style == True:
+                                if sequence.add_to_style == True:
                                     setStyling(token_length, sequence.style)
+                                elif token_name in self.keyword_list:
+                                    setStyling(token_length, self.styles["Keyword"])
+                                elif token_name in self.additional_list:
+                                    setStyling(token_length, self.styles["CustomKeyword"])
                                 else:
-                                    if token_name in self.keyword_list:
-                                        setStyling(token_length, self.styles["Keyword"])
-                                    elif token_name in self.additional_list:
-                                        setStyling(token_length, self.styles["CustomKeyword"])
-                                    else:
-                                        setStyling(token_length, self.styles["Default"])
+                                    setStyling(token_length, self.styles["Default"])
                             break
                 elif token_name in self.keyword_list:
                     setStyling(token_length, self.styles["Keyword"])

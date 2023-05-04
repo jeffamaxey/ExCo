@@ -45,11 +45,7 @@ class Text(data.QsciLexerCustom):
         return "Plain text"
     
     def description(self, style):
-        if style == 0:
-            description = "Text"
-        else:
-            description = ""
-        return description
+        return "Text" if style == 0 else ""
     
     def defaultStyle(self):
         return self.styles["Default"]

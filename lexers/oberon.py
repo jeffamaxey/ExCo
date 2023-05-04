@@ -64,11 +64,11 @@ class Oberon(data.QsciLexerCustom):
         return "Oberon/Modula-2/Component Pascal"
     
     def description(self, style):
-        if style <= 7:
-            description = "Custom lexer for the Oberon/Oberon-2/Modula/Modula-2/Component Pascal programming languages"
-        else:
-            description = ""
-        return description
+        return (
+            "Custom lexer for the Oberon/Oberon-2/Modula/Modula-2/Component Pascal programming languages"
+            if style <= 7
+            else ""
+        )
     
     def defaultStyle(self):
         return self.styles["Default"]

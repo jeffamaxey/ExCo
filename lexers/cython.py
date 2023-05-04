@@ -55,7 +55,7 @@ class Cython(data.QsciLexerPython):
         #Initialize list with keywords
         built_ins = keyword.kwlist
         for i in builtins.__dict__.keys():
-            if not(i in built_ins):
+            if i not in built_ins:
                 built_ins.append(i)
         self._kwrds = list(set(built_ins))
         #Transform list into a single string with spaces between list items
@@ -86,8 +86,4 @@ class Cython(data.QsciLexerPython):
         Overridden method for determining keywords,
         read the QScintilla QsciLexer class documentation on the Riverbank website.
         """
-        keywrds= None
-        #Only state 1 returns keywords, don't know why? Check the C++ Scintilla lexer source files.
-        if state == 1:
-            keywrds = self._kwrds
-        return keywrds
+        return self._kwrds if state == 1 else None

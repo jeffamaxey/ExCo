@@ -138,9 +138,7 @@ class PlainEditor(BaseEditor):
         self.setFocus()
         #Set the last focused widget to the parent basic widget
         self.main_form.last_focused_widget = self._parent
-        data.print_log(
-            "Stored \"{}\" as last focused widget".format(self._parent.name)
-        )
+        data.print_log(f'Stored \"{self._parent.name}\" as last focused widget')
         #Hide the function wheel if it is shown
         self.main_form.view.hide_all_overlay_widgets()
         # Reset the click&drag context menu action

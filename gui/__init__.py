@@ -9,6 +9,7 @@ For more information check the 'LICENSE.txt' file.
 For complete license information of the dependencies, check the 'additional_licenses' directory.
 """
 
+
 import os
 import importlib
 
@@ -16,7 +17,9 @@ path = os.path.dirname(os.path.abspath(__file__))
 for m in os.listdir(path):
     if m.startswith("__"):
         continue
-    module_name = ".{}".format(m.replace(".pyc", '').replace(".pyd", '').replace(".py", ''))
+    module_name = (
+        f""".{m.replace(".pyc", '').replace(".pyd", '').replace(".py", '')}"""
+    )
     module = importlib.import_module(module_name, "gui")
     globals().update(
         {n: getattr(module, n) for n in module.__all__} if hasattr(module, '__all__') 

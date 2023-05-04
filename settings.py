@@ -332,7 +332,7 @@ class SettingsFileManipulator:
             self.settings_filename
         )
         #Check if the settings file exists
-        if self.check_settings_file() == None:
+        if self.check_settings_file() is None:
             #Create the settings file
             self.create_settings_file(self.empty_settings_list)
         #Load the settings from the settings file
@@ -344,13 +344,10 @@ class SettingsFileManipulator:
     
     def create_settings_file(self, list_of_lines):
         """Create the settings file"""
-        #Create/truncate settings file
-        file = open(self.settings_filename_with_path, "w", encoding="utf-8")
-        #Write the default settings string into the empty settings file
-        for line in list_of_lines:
-            file.write(line + "\n")
-        #Close the file handle
-        file.close()
+        with open(self.settings_filename_with_path, "w", encoding="utf-8") as file:
+            #Write the default settings string into the empty settings file
+            for line in list_of_lines:
+                file.write(line + "\n")
     
     def _parse_sessions(self, in_sessions):
         parsed_sessions = []
@@ -375,58 +372,61 @@ class SettingsFileManipulator:
                             recent_files,
                             stored_sessions,
                             context_menu_functions):
-        settings_lines = []
-        settings_lines.append("# General Settings")
-        settings_lines.append("main_window_side = {}".format(main_window_side))
-        settings_lines.append("theme = {}".format(theme.__name__))
-        settings_lines.append("")
-        # Recent file list
-        settings_lines.append("# Recent files")
-        settings_lines.append("recent_files = [")
-        for file in recent_files:
-            settings_lines.append("    {},".format(repr(file)))
-        settings_lines.append("]")
-        settings_lines.append("")
-        # Custom context menu functions
-        settings_lines.append("# Custom context menu functions")
-        settings_lines.append("context_menu_functions = {")
+        settings_lines = [
+            "# General Settings",
+            f"main_window_side = {main_window_side}",
+            f"theme = {theme.__name__}",
+            "",
+            "# Recent files",
+            "recent_files = [",
+        ]
+        settings_lines.extend(f"    {repr(file)}," for file in recent_files)
+        settings_lines.extend(
+            (
+                "]",
+                "",
+                "# Custom context menu functions",
+                "context_menu_functions = {",
+            )
+        )
         for func_type in context_menu_functions:
-            settings_lines.append("    '{}': {{".format(func_type))
-            for func in context_menu_functions[func_type]:
-                settings_lines.append("        {}: '{}',".format(
-                    func, context_menu_functions[func_type][func])
-                )
+            settings_lines.append(f"    '{func_type}': {{")
+            settings_lines.extend(
+                f"        {func}: '{context_menu_functions[func_type][func]}',"
+                for func in context_menu_functions[func_type]
+            )
             settings_lines.append("    },")
-        settings_lines.append("}")
-        settings_lines.append("")
-        # Sessions
-        settings_lines.append("# Sessions")
-        settings_lines.append("sessions = {")
+        settings_lines.extend(("}", "", "# Sessions", "sessions = {"))
         for session in stored_sessions:
-            settings_lines.append("    '{}': {{".format(session.name))
-            if isinstance(session.group, str) or (session.group == None):
-                settings_lines.append("        'Group': {},".format(repr(session.group)))
-            elif isinstance(session.group, tuple) and all([isinstance(x, str) for x in session.group]):
-                settings_lines.append("        'Group': {},".format(str(session.group)))
+            settings_lines.append(f"    '{session.name}': {{")
+            if isinstance(session.group, str) or session.group is None:
+                settings_lines.append(f"        'Group': {repr(session.group)},")
+            elif isinstance(session.group, tuple) and all(
+                isinstance(x, str) for x in session.group
+            ):
+                settings_lines.append(f"        'Group': {str(session.group)},")
             else:
-                print("'{}'".format(repr(session.name)))
+                print(f"'{repr(session.name)}'")
                 raise Exception("[SETTINGS] Unknown session group type!")
             windows = {
                 "Main": session.storage[WINDOWS[0]],
                 "Upper": session.storage[WINDOWS[1]],
                 "Lower": session.storage[WINDOWS[2]],
             }
-            for name,fields in windows.items():
-                settings_lines.append("        '{} window files': {{".format(name))
-                settings_lines.append("            'current-index': {},".format(fields["current-index"]))
-                settings_lines.append("            'files': [".format(fields["current-index"]))
+            for name, fields in windows.items():
+                settings_lines.extend(
+                    (
+                        f"        '{name} window files': {{",
+                        f"""            'current-index': {fields["current-index"]},""",
+                        "            'files': [".format(fields["current-index"]),
+                    )
+                )
                 for item in fields["files"]:
                     if isinstance(item, dict):
-                        settings_lines.append("                {},".format(item))
+                        settings_lines.append(f"                {item},")
                     else:
-                        settings_lines.append("                '{}',".format(item))
-                settings_lines.append("            ],")
-                settings_lines.append("        },")
+                        settings_lines.append(f"                '{item}',")
+                settings_lines.extend(("            ],", "        },"))
             settings_lines.append("    },")
         settings_lines.append("}")
         #Save the file to disk
@@ -439,7 +439,7 @@ class SettingsFileManipulator:
         """Save all settings to the settings file"""
         if self.error_lock == True:
             return
-        if context_menu_functions == None:
+        if context_menu_functions is None:
             context_menu_functions = self.context_menu_functions
         else:
             self.context_menu_functions = context_menu_functions
@@ -564,7 +564,7 @@ class SettingsFileManipulator:
         """
         found_group = False
         filtered_sessions = []
-        for i, session in enumerate(self.stored_sessions):
+        for session in self.stored_sessions:
             if session.group != remove_group:
                 filtered_sessions.append(session)
             else:
@@ -579,13 +579,14 @@ class SettingsFileManipulator:
 
     def get_session(self, session_name, session_group=None):
         """Return the session from the stored sessions list if it exists"""
-        for session in self.stored_sessions:
-            #Check if the session names match 
-            if session.name == session_name and session.group == session_group:
-                #Return the session
-                return session
-        #Return None if session was not found
-        return None
+        return next(
+            (
+                session
+                for session in self.stored_sessions
+                if session.name == session_name and session.group == session_group
+            ),
+            None,
+        )
     
     def sort_sessions(self):
         """Sort the stored sessions alphabetically by name"""
@@ -612,11 +613,8 @@ class SettingsFileManipulator:
                 return
             # Remove the old file with the same name as the new file from the list
             self.recent_files.pop(self.recent_files.index(new_file))
-            # Add the new file to the end of the list
-            self.recent_files.append(new_file)
-        else:
-            # The new file is not in the list, append it to the end of the list
-            self.recent_files.append(new_file)
+        # Add the new file to the end of the list
+        self.recent_files.append(new_file)
         # Save the new settings
         self.update_recent_files()
     
@@ -632,10 +630,7 @@ class SettingsFileManipulator:
             self.subgroups = {}
         
         def subgroup_get(self, name):
-            if name in self.subgroups.keys():
-                return self.subgroups[name]
-            else:
-                return None
+            return self.subgroups[name] if name in self.subgroups.keys() else None
         
         def subgroup_get_recursive(self, group_list):
             name = group_list[0]
@@ -648,7 +643,7 @@ class SettingsFileManipulator:
                 return None
         
         def subgroup_create(self, name, reference):
-            if not(name in self.subgroups.keys()):
+            if name not in self.subgroups.keys():
                 # Create an instance of the same class as self
                 self.subgroups[name] = self.__class__(name, self, reference)
             return self.subgroups[name]
@@ -673,11 +668,12 @@ class SettingsFileManipulator:
                     groups.append(session.group)
         # Sort the group list and add the groups to the session menu
         def sort_groups_func(arg=None):
-            if isinstance(arg, tuple) and all([isinstance(x, str) for x in arg]):
+            if isinstance(arg, tuple) and all(isinstance(x, str) for x in arg):
                 lowercase_group_tree = [x.lower() for x in arg]
                 return " ".join(lowercase_group_tree)
             else:
                 return arg.lower()
+
         groups.sort(key=sort_groups_func)
         return groups
 

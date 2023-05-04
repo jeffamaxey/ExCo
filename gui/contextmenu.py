@@ -63,54 +63,45 @@ class ContextMenu(data.QGroupBox):
         def mousePressEvent(self, event):
             """Overloaded widget click event"""
             button = event.button()
-            if button == data.Qt.LeftButton:
-                # Execute the function if it was initialized
-                if self.function != None:
-                    if components.ActionFilter.click_drag_action != None:
-                        function_name = components.ActionFilter.click_drag_action.function.__name__
-#                        print(self.number, function_name)
-                        if self._parent.functions_type == "standard":
-                            ContextMenu.standard_buttons[self.number] = function_name
-                        elif self._parent.functions_type == "plain":
-                            ContextMenu.standard_buttons[self.number] = function_name
-                        elif self._parent.functions_type == "horizontal":
-                            ContextMenu.horizontal_buttons[self.number] = function_name
-                        elif self._parent.functions_type == "special":
-                            ContextMenu.special_buttons[self.number] = function_name
-                        # Show the newly added function
-                        message = "Added function '{}' at button number {}".format(
-                            components.ActionFilter.click_drag_action.text(),
-                            self.number
-                        )
+            if button == data.Qt.LeftButton and self.function != None:
+                if components.ActionFilter.click_drag_action is None:
+                    try:
+                        # Execute the buttons stored function
+                        self.function()
+                    except:
+                        traceback.print_exc()
+                        message = "You need to focus one of the editor windows first!"
                         self.main_form.display.repl_display_message(
                             message, 
-                            message_type=data.MessageType.SUCCESS
+                            message_type=data.MessageType.ERROR
                         )
-                        # Reset cursor and stored action
-                        data.application.restoreOverrideCursor()
-                        components.ActionFilter.click_drag_action = None
-                    else:
-                        try:
-                            # Execute the buttons stored function
-                            self.function()
-                        except:
-                            traceback.print_exc()
-                            message = "You need to focus one of the editor windows first!"
-                            self.main_form.display.repl_display_message(
-                                message, 
-                                message_type=data.MessageType.ERROR
-                            )
-                    # Close the function wheel
-                    self._parent.hide()
-                    event.accept()
                 else:
-                    event.ignore()
-            elif button == data.Qt.RightButton:
+                    function_name = components.ActionFilter.click_drag_action.function.__name__
+#                        print(self.number, function_name)
+                    if self._parent.functions_type == "horizontal":
+                        ContextMenu.horizontal_buttons[self.number] = function_name
+                    elif self._parent.functions_type == "special":
+                        ContextMenu.special_buttons[self.number] = function_name
+                    elif self._parent.functions_type in ["standard", "plain"]:
+                        ContextMenu.standard_buttons[self.number] = function_name
+                        # Show the newly added function
+                    message = f"Added function '{components.ActionFilter.click_drag_action.text()}' at button number {self.number}"
+                    self.main_form.display.repl_display_message(
+                        message, 
+                        message_type=data.MessageType.SUCCESS
+                    )
+                    # Reset cursor and stored action
+                    data.application.restoreOverrideCursor()
+                    components.ActionFilter.click_drag_action = None
                 # Close the function wheel
                 self._parent.hide()
                 event.accept()
-            else:
+            elif button == data.Qt.LeftButton or button != data.Qt.RightButton:
                 event.ignore()
+            else:
+                # Close the function wheel
+                self._parent.hide()
+                event.accept()
         
         def dim(self, clear_hex_edge=False):
             """Set the buttons opacity to low and clear the function text"""
@@ -245,9 +236,7 @@ class ContextMenu(data.QGroupBox):
         self.setFont(data.get_current_font())
         # Store the painting offset
         self.offset = offset
-        # Set the background color
-        style_sheet = "background-color: transparent;"
-        style_sheet += "border: 0 px;"
+        style_sheet = "background-color: transparent;" + "border: 0 px;"
         self.setStyleSheet(style_sheet)
         # Set the groupbox size
         screen_resolution = data.application.desktop().screenGeometry()
@@ -424,10 +413,10 @@ class ContextMenu(data.QGroupBox):
             raise Exception("Too many inner buttons in context menu!")
         buttons = []
         for i,button in enumerate(in_buttons):
-            if (button in self.function_list) == False:
+            if button not in self.function_list:
                 self.main_form.display.repl_display_message(
-                    "'{}' context menu function does not exist!".format(button), 
-                    message_type=data.MessageType.ERROR
+                    f"'{button}' context menu function does not exist!",
+                    message_type=data.MessageType.ERROR,
                 )
             else:
                 buttons.append(

@@ -28,10 +28,8 @@ class CustomStyle(data.QCommonStyle):
     def __init__(self, style_name):
         super().__init__()
         self._style = data.QStyleFactory.create(style_name)
-        if self._style == None:
-            raise Exception(
-                "Style '{}' is not valid on this system!".format(style_name)
-            )
+        if self._style is None:
+            raise Exception(f"Style '{style_name}' is not valid on this system!")
         """
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         This needs to happen on CustomStyle initialization,
@@ -114,16 +112,15 @@ class CustomStyle(data.QCommonStyle):
         if ct == data.QStyle.CT_MenuItem:
             scaled_width = self.scale_constant*1.5
             resized_width = self.custom_font_metrics.width(opt.text) + scaled_width
-            result = data.QSize(int(resized_width), int(self.scale_constant))
-            return result
+            return data.QSize(int(resized_width), int(self.scale_constant))
         elif ct == data.QStyle.CT_MenuBarItem:
             base_width = self.custom_font_metrics.width(opt.text)
             scaled_width = self.scale_constant*1.5
-            if base_width < scaled_width:
-                result = data.QSize(scaled_width, self.scale_constant)
-            else:
-                result = data.QSize(base_width, self.scale_constant)
-            return result
+            return (
+                data.QSize(scaled_width, self.scale_constant)
+                if base_width < scaled_width
+                else data.QSize(base_width, self.scale_constant)
+            )
         else:
             return self._style.sizeFromContents(ct, opt, contentsSize, widget)
     

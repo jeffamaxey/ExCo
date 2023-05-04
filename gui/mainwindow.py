@@ -141,8 +141,8 @@ class MainWindow(data.QMainWindow):
         self.setObjectName("Form")
         # Set default font
         self.setFont(data.get_current_font())
-        # Initialize the main window 
-        self.setWindowTitle("Ex.Co. " + data.application_version)
+        # Initialize the main window
+        self.setWindowTitle(f"Ex.Co. {data.application_version}")
         # Initialize the log dialog window
         data.log_window = MessageLogger(self)
         # Initialize basic window widgets(main, side_up, side_down)
@@ -163,6 +163,7 @@ class MainWindow(data.QMainWindow):
                 *message, 
                 message_type=data.MessageType.WARNING
             )
+
         functions.repl_print = repl_print
         # Set the three basic widgets inside the splitters
         self.view.set_tab_widgets(
@@ -324,7 +325,7 @@ class MainWindow(data.QMainWindow):
             )
         )
         #Create auto completion list for the REPL
-        ac_list_prim    = [x for x in new_references]
+        ac_list_prim = list(new_references)
         #Add Python/custom keywords to the primary level autocompletions
         ac_list_prim.extend(keyword.kwlist)
         ac_list_prim.extend(["range"])
@@ -335,17 +336,23 @@ class MainWindow(data.QMainWindow):
         ac_list_sec     = []
         keywords        = new_references
         #Get all keyword methods and variables
-        for key in keywords:
+        for key, value in keywords.items():
             ac_list_sec.append(key)
             #Add methods to secondary autocompletion list
-            for method in inspect.getmembers(keywords[key], predicate=inspect.isroutine):
-                if str(method[0])[0] != '_':
-                    ac_list_sec.append(str(key) + "." + str(method[0]))
+            ac_list_sec.extend(
+                f"{str(key)}.{str(method[0])}"
+                for method in inspect.getmembers(
+                    value, predicate=inspect.isroutine
+                )
+                if str(method[0])[0] != '_'
+            )
             #Add variables to secondary autocompletion list
             try:
-                for variable in keywords[key].__dict__:
-                    if str(variable)[0] != '_':
-                        ac_list_sec.append(str(key) + "." + str(variable))
+                ac_list_sec.extend(
+                    f"{str(key)}.{str(variable)}"
+                    for variable in keywords[key].__dict__
+                    if str(variable)[0] != '_'
+                )
             except:
                 pass
         #Return the tuple
@@ -363,10 +370,10 @@ class MainWindow(data.QMainWindow):
         if data.platform == "Windows":
             self.repl._repl_eval("r: explorer .")
         elif data.platform == "Linux":
-            self.repl._repl_eval("r: xdg-open \"{}\"".format(cwd))
+            self.repl._repl_eval(f'r: xdg-open \"{cwd}\"')
         else:
             self.display.repl_display_message(
-                "Not implemented on '{}' platform!".format(data.platform)
+                f"Not implemented on '{data.platform}' platform!"
             )
 
     def set_cwd(self, directory):
@@ -394,9 +401,10 @@ class MainWindow(data.QMainWindow):
                 message_type=data.MessageType.WARNING
             )
             self.display.write_to_statusbar(message)
+
         #Check if there is a document in the main basic widget
         current_widget = self.main_window.currentWidget()
-        if current_widget == None:
+        if current_widget is None:
             message = "No document in the main window!"
             display(message)
             return
@@ -440,18 +448,17 @@ class MainWindow(data.QMainWindow):
     def keyPressEvent(self, event):
         """QMainWindow keyPressEvent, to catch which key was pressed"""
         #Check if the lock is released
-        if self.key_lock == False:
-            #Check for active keys
-            if self._window_filter_keypress(event) == True:
-                return
+        if self.key_lock == False and self._window_filter_keypress(event) == True:
+            return
     
     def keyReleaseEvent(self, event):
         """QMainWindow keyReleaseEvent, to catch which key was pressed"""
         #Check if the lock is released
-        if self.key_lock == False:
-            #Check for active keys
-            if self._window_filter_keyrelease(event) == True:
-                return
+        if (
+            self.key_lock == False
+            and self._window_filter_keyrelease(event) == True
+        ):
+            return
     
     def mousePressEvent(self, event):
         """Overridden main window mouse click event"""
@@ -466,19 +473,17 @@ class MainWindow(data.QMainWindow):
     def _window_filter_keypress(self, key_event):
         """Filter keypress for appropriate action"""
         pressed_key = key_event.key()
-        accept_keypress = False
         #Check for escape keypress
-        if pressed_key == data.Qt.Key_Escape:
-            #Check if the function wheel overlay is shown
-            if self.view.function_wheel_overlay.isVisible() == True:
-                self.view.toggle_function_wheel()
-        return accept_keypress
+        if (
+            pressed_key == data.Qt.Key_Escape
+            and self.view.function_wheel_overlay.isVisible() == True
+        ):
+            self.view.toggle_function_wheel()
+        return False
     
     def _window_filter_keyrelease(self, key_event):
-            """Filter keyrelease for appropriate action"""
-            #released_key = key_event.key()
-            accept_keyrelease = False
-            return accept_keyrelease
+        """Filter keyrelease for appropriate action"""
+        return False
 
     def _key_events_lock(self):
         """
@@ -503,13 +508,12 @@ class MainWindow(data.QMainWindow):
         Function for using a QFileDialog window for retreiving
         a directory name as a string
         """
-        directory = data.QFileDialog.getExistingDirectory(
-            self, # QWidget parent = None
-            None, # QString caption = ''
-            os.getcwd(), # QString directory = ''
+        return data.QFileDialog.getExistingDirectory(
+            self,  # QWidget parent = None
+            None,  # QString caption = ''
+            os.getcwd(),  # QString directory = ''
             # Options options = QFileDialog.ShowDirsOnly
         )
-        return directory
     
     def run_process(self, command, show_console=True, output_to_repl=False):
         """Run a command line process and display the result"""
@@ -529,23 +533,30 @@ class MainWindow(data.QMainWindow):
     def file_save(self, encoding="utf-8", line_ending=None):
         """The function name says it all"""
         focused_tab = self.get_tab_by_focus()
-        if isinstance(focused_tab, CustomEditor) == True:
-            if focused_tab != None and focused_tab.savable == data.CanSave.YES:
-                focused_tab.save_document(
-                    saveas=False,
-                    encoding=encoding, 
-                    line_ending=line_ending
+        if (
+            isinstance(focused_tab, CustomEditor)
+            and focused_tab != None
+            and focused_tab.savable == data.CanSave.YES
+        ):
+            focused_tab.save_document(
+                saveas=False,
+                encoding=encoding, 
+                line_ending=line_ending
+            )
+            if encoding == "cp1250":
+                self.display.repl_display_success(
+                    f"Saved file {focused_tab.save_name} in ANSI encoding."
                 )
-                if encoding == "cp1250":
-                    self.display.repl_display_success("Saved file {} in ANSI encoding.".format(focused_tab.save_name))
-                elif encoding == "ascii":
-                    self.display.repl_display_success("Saved file {} in ASCII encoding.".format(focused_tab.save_name))
-                # Set the icon if it was set by the lexer
-                focused_tab.icon_manipulator.update_icon(focused_tab)
-                # Reimport the user configuration file and update the menubar
-                if functions.is_config_file(focused_tab.save_name) == True:
-                    self.update_menubar()
-                    self.import_user_functions()
+            elif encoding == "ascii":
+                self.display.repl_display_success(
+                    f"Saved file {focused_tab.save_name} in ASCII encoding."
+                )
+            # Set the icon if it was set by the lexer
+            focused_tab.icon_manipulator.update_icon(focused_tab)
+            # Reimport the user configuration file and update the menubar
+            if functions.is_config_file(focused_tab.save_name) == True:
+                self.update_menubar()
+                self.import_user_functions()
     
     def file_saveas(self, encoding="utf-8"):
         """The function name says it all"""
@@ -572,7 +583,7 @@ class MainWindow(data.QMainWindow):
             for i in range(0, window.count()):
                 tab = window.widget(i)
                 #Skip to next tab if it is not a CustomEditor
-                if isinstance(tab, CustomEditor) == False:
+                if not isinstance(tab, CustomEditor):
                     continue
                 #Test if the tab is modified and savable
                 if (tab.savable == data.CanSave.YES and 

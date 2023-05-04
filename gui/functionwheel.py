@@ -115,11 +115,11 @@ class FunctionWheel(data.QGroupBox):
         Dinamically create the function wheel's background image
         """
         # Check if the QPixmap has been created already
-        if FunctionWheel.function_wheel_background_image == None:
+        if FunctionWheel.function_wheel_background_image is None:
             edge_length = 30
-            
+
             FunctionWheel.theme_name = data.theme.name
-            
+
             function_wheel_background_image = data.QImage(
                 functions.create_size(600, 555),
                 data.QImage.Format_ARGB32_Premultiplied
@@ -131,7 +131,7 @@ class FunctionWheel(data.QGroupBox):
                 data.QPainter.TextAntialiasing | 
                 data.QPainter.SmoothPixmapTransform
             )
-            
+
             offset = (53, 57)
             edge_length = 30
             # Bottom grid
@@ -144,10 +144,10 @@ class FunctionWheel(data.QGroupBox):
                 line_width=2,
                 line_color=data.theme.Settings_Hex_Edge,
             )
-            
+
             grid_list = [(1, True)]
             grid_list.extend(5 * [(2, True), (1, True)] + [(3, True)])
-            for i in range(4):
+            for _ in range(4):
                 grid_list.extend(5 * [(4, True), (5, True)] + [(4, True), (3, True)])
                 grid_list.extend(5 * [(1, True), (2, True)] + [(1, True), (3, True)])
             grid_list.extend(5 * [(4, True), (5, True)] + [(4, True)])
@@ -166,7 +166,7 @@ class FunctionWheel(data.QGroupBox):
             hex_builder.create_grid(
                 2, 1, 5
             )
-            
+
             painter.end()
             original_dialog_image = data.QPixmap.fromImage(function_wheel_background_image)
             FunctionWheel.function_wheel_background_image = data.QPixmap.fromImage(function_wheel_background_image)
@@ -228,7 +228,7 @@ class FunctionWheel(data.QGroupBox):
         )
         self.layout.addWidget(self.picture)
         self.setLayout(self.layout)
-        
+
         #Initialize the display label that will display the function names
         #when the mouse cursor is over a function button
         self.display_label = data.QLabel(self)
@@ -240,11 +240,7 @@ class FunctionWheel(data.QGroupBox):
             data.Qt.AlignHCenter | data.Qt.AlignVCenter
         )
         self.display_label.setStyleSheet(
-            'color: rgb({}, {}, {})'.format(
-                data.theme.Font.Default.red(),
-                data.theme.Font.Default.green(),
-                data.theme.Font.Default.blue(),
-            )
+            f'color: rgb({data.theme.Font.Default.red()}, {data.theme.Font.Default.green()}, {data.theme.Font.Default.blue()})'
         )
         #Initialize all of the hex function buttons
         self._init_all_buttons()
@@ -1022,7 +1018,22 @@ class FunctionWheel(data.QGroupBox):
         #Create all of the buttons from the list
         for button in hex_button_list:
             #Initialize the custom hex buttom
-            if button.extra_button != None:
+            if button.extra_button is None:
+                init_button = CustomButton(
+                    self, 
+                    self.main_form, 
+                    input_pixmap=functions.create_pixmap(button.pixmap), 
+                    input_function=button.function, 
+                    input_function_text=button.function_text, 
+                    input_font=button.font, 
+                    input_focus_last_widget=button.focus_last_widget, 
+                    input_no_tab_focus_disable=button.no_tab_focus_disable, 
+                    input_no_document_focus_disable=button.no_document_focus_disable, 
+                    input_check_last_tab_type=button.check_last_tab_type, 
+                    input_check_text_differ=button.check_text_differ, 
+                    input_tool_tip=button.tool_tip, 
+                )
+            else:
                 init_button = DoubleButton(
                     self, 
                     self.main_form, 
@@ -1044,21 +1055,6 @@ class FunctionWheel(data.QGroupBox):
                     input_extra_function=button.extra_button[1],
                     input_extra_function_text=button.extra_button[2], 
                 )
-            else:
-                init_button = CustomButton(
-                    self, 
-                    self.main_form, 
-                    input_pixmap=functions.create_pixmap(button.pixmap), 
-                    input_function=button.function, 
-                    input_function_text=button.function_text, 
-                    input_font=button.font, 
-                    input_focus_last_widget=button.focus_last_widget, 
-                    input_no_tab_focus_disable=button.no_tab_focus_disable, 
-                    input_no_document_focus_disable=button.no_document_focus_disable, 
-                    input_check_last_tab_type=button.check_last_tab_type, 
-                    input_check_text_differ=button.check_text_differ, 
-                    input_tool_tip=button.tool_tip, 
-                )
             #Set the button size and location
             init_button.setGeometry(
                 int(button.geometry[0]), 
@@ -1071,13 +1067,14 @@ class FunctionWheel(data.QGroupBox):
         """Check the hex function button states when displaying the function wheel"""
         for child_widget in self.children():
             #Skip the child widget if it is not a hex or double button
-            if (isinstance(child_widget, CustomButton) == False and
-                isinstance(child_widget, DoubleButton) == False):
+            if not isinstance(child_widget, CustomButton) and not isinstance(
+                child_widget, DoubleButton
+            ):
                 continue
             #First display and enable the hex button
             child_widget.setVisible(True)
             child_widget.setEnabled(True)
-            if isinstance(child_widget, DoubleButton) == True:
+            if isinstance(child_widget, DoubleButton):
                 child_widget.extra_button_enable()
             #If the button needs to focus on the last focused widget,
             #check if the last focused widget is valid
@@ -1086,31 +1083,38 @@ class FunctionWheel(data.QGroupBox):
             result = False
             if last_widget != None and last_widget.count() != 0:
                 result = True
-            if result == False and child_widget.no_tab_focus_disable == True:
+            if not result and child_widget.no_tab_focus_disable == True:
                 #Disable if no tab is focused
                 child_widget.setEnabled(False)
-            elif result == False and child_widget.no_document_focus_disable == True:
+            elif not result and child_widget.no_document_focus_disable == True:
                 #If document focus is needed by the button, check if a tab is a focused document
                 child_widget.setEnabled(False)
-            elif (child_widget.no_document_focus_disable == True and
-                 (isinstance(last_tab, CustomEditor) == False and
-                  isinstance(last_tab, PlainEditor) == False)):
+            elif (
+                child_widget.no_document_focus_disable == True
+                and not isinstance(last_tab, CustomEditor)
+                and not isinstance(last_tab, PlainEditor)
+            ):
                 #If focus is needed by the button, check the tab is an editing widget
                 child_widget.setEnabled(False)
-            elif (child_widget.check_last_tab_type == True and
-                  isinstance(last_tab, CustomEditor) == False):
+            elif child_widget.check_last_tab_type == True and not isinstance(
+                last_tab, CustomEditor
+            ):
                 #Check tab type for save/save_as/save_all buttons, it must be a CustomEditor
                 child_widget.setEnabled(False)
-            elif (child_widget.no_document_focus_disable == True and
-                  hasattr(last_tab, "actual_parent") == True and
-                  isinstance(last_tab.actual_parent, TextDiffer) == True):
+            elif (
+                child_widget.no_document_focus_disable == True
+                and hasattr(last_tab, "actual_parent") == True
+                and isinstance(last_tab.actual_parent, TextDiffer)
+            ):
                 #Check if tab is a TextDiffer, enable only the supported functions
-                if (child_widget.function_text != "Find" and
-                    child_widget.function_text != "Regex Find" and
-                    child_widget.function_text != "Goto Line" and
-                    child_widget.function_text != "Move Tab\nLeft" and
-                    child_widget.function_text != "Move Tab\nRight" and
-                    child_widget.function_text != "Close Current\nTab"):
+                if child_widget.function_text not in [
+                    "Find",
+                    "Regex Find",
+                    "Goto Line",
+                    "Move Tab\nLeft",
+                    "Move Tab\nRight",
+                    "Close Current\nTab",
+                ]:
                     child_widget.setEnabled(False)
             #Call the dim method to draw the hex edge if the button is enabled
             if child_widget.isEnabled() == True:
@@ -1123,9 +1127,8 @@ class FunctionWheel(data.QGroupBox):
         """Overridden widget hide event"""
         #Set focus to the last focused widget stored on the main form
         last_widget = self.main_form.last_focused_widget
-        if last_widget != None:
-            if last_widget.currentWidget() != None:
-                last_widget.currentWidget().setFocus()
+        if last_widget != None and last_widget.currentWidget() != None:
+            last_widget.currentWidget().setFocus()
     
     def display(self, string, font):
         """Display string in the display label"""
@@ -1143,14 +1146,15 @@ class FunctionWheel(data.QGroupBox):
         #First clear the hex edge from all of the buttons
         for child_widget in self.children():
             #Skip the child widget if it is not a hex or double button
-            if (isinstance(child_widget, CustomButton) == False and
-                isinstance(child_widget, DoubleButton) == False):
+            if not isinstance(child_widget, CustomButton) and not isinstance(
+                child_widget, DoubleButton
+            ):
                 continue
             #Dim the button and clear the hex edge
             child_widget.dim(clear_hex_edge=True)
             #Hide the button, fixes a leaveEvent issue with the "Open File" function.
             child_widget.setVisible(False)
-            if isinstance(child_widget, DoubleButton) == True:
+            if isinstance(child_widget, DoubleButton):
                 child_widget.extra_button_disable()
         #Disable the function wheel
         self.setVisible(False)
@@ -1210,22 +1214,23 @@ class FunctionWheel(data.QGroupBox):
         """Name says it all"""
         #Check if there is a stored button function
         last_function_text = self.main_form.view.last_executed_function_text
-        if last_function_text == None:
+        if last_function_text is None:
             return
         #Loop through the buttons and check its function
         for button in self.children():
-            if isinstance(button, CustomButton):
-                #Compare the stored function text with the buttons function text
-                if button.function_text == last_function_text:
-                    #Only higlight the button if it is enabled
-                    if button.isEnabled() == True:
-                        button.highlight()
-                    button_position = self.mapToGlobal(button.geometry().topLeft())
-                    cursor = data.QCursor()
-                    cursor.setPos(
-                        button_position.x() + int(button.geometry().width()/2), 
-                        button_position.y() + int(button.geometry().height()/2)
-                    )
-                    break
+            if (
+                isinstance(button, CustomButton)
+                and button.function_text == last_function_text
+            ):
+                #Only higlight the button if it is enabled
+                if button.isEnabled() == True:
+                    button.highlight()
+                button_position = self.mapToGlobal(button.geometry().topLeft())
+                cursor = data.QCursor()
+                cursor.setPos(
+                    button_position.x() + int(button.geometry().width()/2), 
+                    button_position.y() + int(button.geometry().height()/2)
+                )
+                break
 
 

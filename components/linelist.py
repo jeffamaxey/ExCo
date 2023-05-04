@@ -57,7 +57,7 @@ class LineList(list):
             key_min     = key.start
             key_max     = key.stop
             #Check the lower bound of the slice is 0
-            if key_min == None:
+            if key_min is None:
                 key_min = 0
             #Check if the key is greater than 0
             if key_min > 0:
@@ -70,7 +70,7 @@ class LineList(list):
     def __setitem__(self, key, value):
         """Overridden list method that sets the specified line(item) to a value"""
         #Check if the value is a string or a list
-        if isinstance(value, str) == False and isinstance(value, list) == False:
+        if not isinstance(value, str) and not isinstance(value, list):
             raise Exception("Value has to be a list or a string!")
         #Check if the value is a string or a list
         if isinstance(value, str):
@@ -101,8 +101,7 @@ class LineList(list):
             #Check boundary order
             if key_max < key_min:
                 raise Exception(
-                    "First index has to be higher than the second!" +
-                    " {}(max) > {}(min)".format(key_max, key_min)
+                    f"First index has to be higher than the second! {key_max}(max) > {key_min}(min)"
                 )
             #Check the boundaries
             if len(value) != (key_max-key_min+1):
@@ -130,7 +129,7 @@ class LineList(list):
     def _setitem(self, key, value):
         """Set the item at position-key, without updating the scintilla document"""
         #Check if the value is a string
-        if isinstance(value, str) == False:
+        if not isinstance(value, str):
             return
         #Try to set the line
         try:
@@ -155,7 +154,7 @@ class LineList(list):
         #Update the text of the document
         self._parent.set_all_text(text)
         #Check if a line to which to scroll to was specified
-        if scroll_to_line == None:
+        if scroll_to_line is None:
             scroll_to_line = self._parent.lines()
         #Scroll to the desired line of the document
         self._parent.setCursorPosition(scroll_to_line, 0)
@@ -170,7 +169,7 @@ class LineList(list):
                                      CustomEditor document.
         """
         #Check the update_parent parameter type
-        if isinstance(update_parent, bool) == False:
+        if not isinstance(update_parent, bool):
             raise Exception("'update_parent' parameter must be of type boolean!")
         #Check the append value type
         if isinstance(value, str):
@@ -196,12 +195,12 @@ class LineList(list):
                                      CustomEditor document.
         """
         #Check the update_parent parameter type
-        if isinstance(update_parent, bool) == False:
+        if not isinstance(update_parent, bool):
             raise Exception("'update_parent' parameter must be of type boolean!")
         #Check the extend value type
-        if isinstance(value, list) == False:
+        if not isinstance(value, list):
             raise Exception("Extend parameter must be a list!")
-        elif all(isinstance(item, str) for item in value) == False:
+        elif not all(isinstance(item, str) for item in value):
             raise Exception("All extend list items must be strings!")
         #Extend the list
         super().extend(value)
@@ -212,15 +211,14 @@ class LineList(list):
     def insert(self, index, value, update_parent=True):
         """Overloaded insert method"""
         #Check the insert index type
-        if isinstance(index, int) == False:
+        if not isinstance(index, int):
             raise Exception("Insert index parameter must be an integer!")
         #Check the insert value type
-        if isinstance(value, str) == False:
+        if not isinstance(value, str):
             raise Exception("Insert parameter must be a string!")
         #Correct and check the index
         index -= 1
-        if index < 0:
-            index = 0
+        index = max(index, 0)
         #Insert the item
         super().insert(index, value)
         #Check if updating the parent document is needed
@@ -230,12 +228,11 @@ class LineList(list):
     def pop(self, index=None, update_parent=True):
         """Overloaded pop method"""
         #Check the insert index type
-        if isinstance(index, int) == False:
+        if not isinstance(index, int):
             raise Exception("Pop index parameter must be an integer!")
         #Correct and check the index
         index -= 1
-        if index < 0:
-            index = 0
+        index = max(index, 0)
         #Pop out the item
         return_item = super().pop(index)
         #Check if updating the parent document is needed
@@ -247,16 +244,13 @@ class LineList(list):
     def remove(self, item, update_parent=True):
         """Overloaded remove method"""
         #Check the insert index type
-        if isinstance(item, str) == False:
+        if not isinstance(item, str):
             raise Exception("Remove item parameter must be a string!")
-        #Check if item exists
-        if not(item in self):
+        if item not in self:
             raise Exception("Cannot remove item! Item is not in the list!")
-        else:
-            index = self.index(item) - 1
+        index = self.index(item) - 1
             #Check the index
-            if index < 0:
-                index = 0    
+        index = max(index, 0)
         #Remove the item
         super().remove(item)
         #Check if updating the parent document is needed
@@ -282,7 +276,7 @@ class LineList(list):
     def update_text_to_list(self, update_text):
         """Update the list from a string"""
         #Check if the value is a string
-        if isinstance(update_text, str) == False:
+        if not isinstance(update_text, str):
             return
         #Empty the list
         self._clear()
@@ -292,9 +286,7 @@ class LineList(list):
     def get_absolute_cursor_position(self):
         """Get the absolute cursor position"""
         line, index = self._parent.getCursorPosition()
-        absolute_position = 0
-        for i in range(line):
-            absolute_position += len(self[i])
+        absolute_position = sum(len(self[i]) for i in range(line))
         absolute_position += index + 1
         return absolute_position
     

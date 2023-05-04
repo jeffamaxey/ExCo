@@ -258,7 +258,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             )
         
         def add_to_queue(self, direction):
-            if self.queue == None:
+            if self.queue is None:
                 self.queue = [direction]
             else:
                 self.queue.append(direction)
@@ -278,7 +278,7 @@ class SettingsGuiManipulator(data.QGroupBox):
                     self.shrink()
                 else:
                     self.animate()
-            elif self.queue != None and len(self.queue) == 0:
+            elif self.queue != None:
                 scaled_pixmap = self.pixmap().scaled(
                     self.size(),
                     transformMode=data.Qt.SmoothTransformation
@@ -289,7 +289,7 @@ class SettingsGuiManipulator(data.QGroupBox):
                 self.animating = False
         
         def set_color(self, color):
-            if not(color in self.valid_colors):
+            if color not in self.valid_colors:
                 raise Exception("Invalid EnlargeButton color selected!")
             elif color == "red":
                 selected_image = self.hex_image_red
@@ -297,9 +297,9 @@ class SettingsGuiManipulator(data.QGroupBox):
                 selected_image = self.hex_image_green
             elif color == "default":
                 selected_image = None
-            
+
             self.current_color = color
-            
+
             scaled_size = functions.create_size(
                 self.hex_image.size().width(),
                 self.hex_image.size().height(),
@@ -450,9 +450,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             super().mousePressEvent(event)
             if self.enabled == False:
                 return
-            if self.function != None:
-                pass
-            else:
+            if self.function is None:
                 print(self.name, self.key_combination)
                 self.add_to_queue("leave")
                 self.animate()
@@ -488,20 +486,20 @@ class SettingsGuiManipulator(data.QGroupBox):
         Dinamically create the settings manipulator's background image
         """
         # Check if the QPixmap has been created already
-        if SettingsGuiManipulator.settings_background_image == None:
+        if SettingsGuiManipulator.settings_background_image is None:
             scale = in_scale
             edge_length = 27
             scaled_edge_diff = (edge_length - (edge_length * scale)) / edge_length
             back_color = data.theme.Settings_Background
             edge_color = data.QColor(data.theme.Settings_Hex_Edge)
-            
+
             SettingsGuiManipulator.theme_name = data.theme.name
-            
+
             def add_offset(offset):
                 x_add = 64.0
                 y_add = 20.0
                 return (offset[0] + x_add, offset[1] + y_add)
-            
+
             settings_background_image = data.QImage(
                 functions.create_size(*SettingsGuiManipulator.DEFAULT_SIZE),
                 data.QImage.Format_ARGB32_Premultiplied
@@ -514,7 +512,7 @@ class SettingsGuiManipulator(data.QGroupBox):
                 data.QPainter.TextAntialiasing | 
                 data.QPainter.SmoothPixmapTransform
             )
-            
+
             # Corner options
             x = edge_length + 205
             y = 1.8 * edge_length + 30
@@ -548,7 +546,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             hb.create_grid(
                 5,5,0,2,0,2,3,1,0,2,3,4
             )
-            
+
             # Editor buttons
             offset = (90, 280)
             offset = add_offset(offset)
@@ -590,7 +588,7 @@ class SettingsGuiManipulator(data.QGroupBox):
                 (3, True), (3, True),
             ]
             hb.create_grid(*grid_list)
-            
+
             # General buttons
             offset = (offset[0]+(8*hb.horizontal_step), offset[1]-(6*hb.vertical_step))
             row_length = 7
@@ -628,7 +626,7 @@ class SettingsGuiManipulator(data.QGroupBox):
                 (3, True), (3, True), (3, True), 
             ]
             hb.create_grid(*grid_list)
-            
+
             qpainter.end()
             SettingsGuiManipulator.settings_background_image = data.QPixmap.fromImage(settings_background_image)
         return SettingsGuiManipulator.settings_background_image
@@ -712,11 +710,7 @@ class SettingsGuiManipulator(data.QGroupBox):
         font.setBold(True)
         self.display_label.setFont(font)
         self.display_label.setStyleSheet(
-            'color: rgb({}, {}, {})'.format(
-                data.theme.Font.Default.red(),
-                data.theme.Font.Default.green(),
-                data.theme.Font.Default.blue(),
-            )
+            f'color: rgb({data.theme.Font.Default.red()}, {data.theme.Font.Default.green()}, {data.theme.Font.Default.blue()})'
         )
         self.display_label.setAlignment(
             data.Qt.AlignHCenter | data.Qt.AlignVCenter
@@ -747,24 +741,24 @@ class SettingsGuiManipulator(data.QGroupBox):
                 info = info[:info.find('\t')]
             keys = info_text.split("\n")[1]
             if keys.startswith('(#'):
-                keys = '(' + keys[2:]
+                keys = f'({keys[2:]}'
             if "[" in keys and "]" in keys:
                 keys = keys.replace("[", "").replace("]", "").replace("\"", "").replace("'", "")
-            text = textwrap.fill(info + "\n" + keys, 14) 
+            text = textwrap.fill(info + "\n" + keys, 14)
             self.display_label.setText(text)
             # Execute the function
             found_duplicate = False
             for b in self.buttons:
-                if b.name != button.name:
-                    if b.key_combination == key_combination:
-                        b.set_red()
-                        found_duplicate = True
+                if b.name != button.name and b.key_combination == key_combination:
+                    b.set_red()
+                    found_duplicate = True
             if found_duplicate == True:
                 button.set_red()
             else:
                 button.set_green()
             if func != None:
                 func()
+
         def mouse_leave_function(button, key_combination, func=None):
             self.display_label.setText("")
             # Execute the function
@@ -773,7 +767,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             button.reset_color()
             if func != None:
                 func()
-        
+
         # Initialize button list
         self.buttons = []
         # Initialize the button icons and functions
@@ -795,8 +789,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             data.global_function_information["bookmark_store_0"][3].replace("+0", ""),
             "Store bookmark"
         )
-        key_list = list(funcs.keys())
-        key_list.sort()
+        key_list = sorted(funcs.keys())
         for k in key_list:
             # Skip the individual bookmark goto and store key combinations
             if k.startswith("bookmark_goto_") or k.startswith("bookmark_store_"):
@@ -829,7 +822,7 @@ class SettingsGuiManipulator(data.QGroupBox):
                     buttons.append(
                         (b_name, b_icon, b_keys, mef, mlf)
                     )
-        
+
         # Adjusted button edge length relative to the background
         # HexBuilder edge length.
         button_edge_length = 26
@@ -853,7 +846,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             grid_steps.append(
                 (next_step[0] + x_add, next_step[1] + y_add)
             )
-        positions = [x for x in grid_steps]
+        positions = list(grid_steps)
         if len(buttons) > len(positions):
             raise Exception("Settings buttons have to have their positions defined!")
         buttons = [((-positions[i][0], -100), positions[i], b[0], b[1], b[2], b[3], b[4]) 
@@ -872,7 +865,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             button.set_leave_function(b[6])
             button.goto_starting_position()
             self.buttons.append(button)
-        
+
         # Editor button positions
         first_button_position = (
             self.buttons_editor_position[0], 
@@ -893,7 +886,7 @@ class SettingsGuiManipulator(data.QGroupBox):
             grid_steps.append(
                 (next_step[0] + x_add, next_step[1] + y_add)
             )
-        positions = [x for x in grid_steps]
+        positions = list(grid_steps)
         if len(editor_buttons) > len(positions):
             raise Exception("Settings buttons have to have their positions defined!")
         editor_buttons = [

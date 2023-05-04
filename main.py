@@ -104,12 +104,12 @@ def main():
         data.logging_mode = True
     file_arguments = options.files
     if options.single_file != None:
-        if file_arguments != None:
+        if file_arguments is None:
+            file_arguments = [options.single_file]
+        else:
             file_list = file_arguments.split(";")
             file_list.append(options.single_file)
             file_arguments = ";".join(file_list)
-        else:
-            file_arguments = [options.single_file]
     if file_arguments == ['']:
         file_arguments = None
     # Create QT application, needed to use QT forms
@@ -133,9 +133,5 @@ def main():
     sys.exit(app.exec_())
     
 # Check if this is the main executing script
-if __name__ == '__main__':
-    main()
-elif '__main__' in __name__:
-    # cx_freeze mangles the __name__ variable,
-    # but it still contains '__main__'
+if __name__ == '__main__' or '__main__' in __name__:
     main()

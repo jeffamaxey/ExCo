@@ -143,17 +143,18 @@ class TabWidget(data.QTabWidget):
             event_button    = event.button()
             key_modifiers   = data.QApplication.keyboardModifiers()
             #Tab Drag&Drop functionality
-            if event_button == data.Qt.LeftButton:
-                if (key_modifiers == data.Qt.ControlModifier or
-                    key_modifiers == data.Qt.ShiftModifier):
-                    tab_number = self._parent.tabBar().tabAt(event.pos())
-                    if tab_number != -1:
-                        mime_data = data.QMimeData()
-                        mime_data.setText("{} {:d}".format(self._parent.name, tab_number))
-                        drag = data.QDrag(self._parent)
-                        drag.setMimeData(mime_data)
-                        drag.setHotSpot(event.pos())
-                        drag.exec_(data.Qt.CopyAction | data.Qt.MoveAction)
+            if event_button == data.Qt.LeftButton and key_modifiers in [
+                data.Qt.ControlModifier,
+                data.Qt.ShiftModifier,
+            ]:
+                tab_number = self._parent.tabBar().tabAt(event.pos())
+                if tab_number != -1:
+                    mime_data = data.QMimeData()
+                    mime_data.setText("{} {:d}".format(self._parent.name, tab_number))
+                    drag = data.QDrag(self._parent)
+                    drag.setMimeData(mime_data)
+                    drag.setHotSpot(event.pos())
+                    drag.exec_(data.Qt.CopyAction | data.Qt.MoveAction)
         
         def mouseReleaseEvent(self, event):
             # Execute the superclass event method
@@ -210,24 +211,27 @@ class TabWidget(data.QTabWidget):
                 action.setIcon(icon)
                 action.triggered.connect(action_func)
                 return action
+
             #Nested function for creating text difference actions
             def create_diff_action(action_name,
-                                   main_form, 
-                                   compare_tab_1, 
-                                   compare_tab_2):
+                                       main_form, 
+                                       compare_tab_1, 
+                                       compare_tab_2):
                 def difference_function(main_form, 
-                                        compare_tab_1, 
-                                        compare_tab_2):
+                                                compare_tab_1, 
+                                                compare_tab_2):
                     #Check for text documents in both tabs
-                    if (isinstance(compare_tab_1, CustomEditor) == False and
-                         isinstance(compare_tab_1, PlainEditor) == False):
+                    if not isinstance(compare_tab_1, CustomEditor) and not isinstance(
+                        compare_tab_1, PlainEditor
+                    ):
                         main_form.display.repl_display_message(
                             "First tab is not a text document!", 
                             message_type=data.MessageType.ERROR
                         )
                         return
-                    elif (isinstance(compare_tab_2, CustomEditor) == False and
-                         isinstance(compare_tab_2, PlainEditor) == False):
+                    elif not isinstance(compare_tab_2, CustomEditor) and not isinstance(
+                        compare_tab_2, PlainEditor
+                    ):
                         main_form.display.repl_display_message(
                             "Second tab is not a text document!", 
                             message_type=data.MessageType.ERROR
@@ -245,6 +249,7 @@ class TabWidget(data.QTabWidget):
                         text_1_name, 
                         text_2_name
                     )
+
                 diff_action = data.QAction(action_name, self)
                 if "main" in action_name.lower():
                     diff_action.setIcon(functions.create_icon('tango_icons/compare-text-main.png'))
@@ -260,14 +265,12 @@ class TabWidget(data.QTabWidget):
                             )
                 diff_action.triggered.connect(function)
                 return diff_action
+
             #Nested function for checking is the basic widgets current tab is an editor
             def check_for_editor(tab_widget):
                 current_tab = tab_widget.currentWidget()
-                if (isinstance(current_tab, CustomEditor) == True or
-                    isinstance(current_tab, PlainEditor) == True):
-                    return True
-                else:
-                    return False
+                return isinstance(current_tab, (CustomEditor, PlainEditor))
+
             #Nested function for updating the current working directory
             def update_cwd():
                 #Get the document path
@@ -281,6 +284,7 @@ class TabWidget(data.QTabWidget):
                     )
                     return
                 main_form.set_cwd(path)
+
             #Initialize the superclass
             super().__init__(parent)
             #Change the basic widget name to lowercase
@@ -345,6 +349,7 @@ class TabWidget(data.QTabWidget):
                 cb = data.application.clipboard()
                 cb.clear(mode=cb.Clipboard)
                 cb.setText(editor_widget.name, mode=cb.Clipboard)
+
             clipboard_copy_action.setIcon(
                 functions.create_icon('tango_icons/edit-copy.png')
             )
@@ -365,6 +370,7 @@ class TabWidget(data.QTabWidget):
                 if (check_for_editor(main_form.lower_window) == True and
                     editor_widget != main_form.lower_window.currentWidget()):
                     self.addAction(diff_lower_action)
+
             #Check which basic widget is the parent to the clicked tab
             if "main" in tab_widget_name:
                 #Add the actions to the menu
@@ -372,16 +378,17 @@ class TabWidget(data.QTabWidget):
                 self.addAction(move_to_lower)
                 self.addSeparator()
                 #Check the tab widget type
-                if isinstance(editor_widget, CustomEditor) == True:
+                if isinstance(editor_widget, CustomEditor):
                     #Copy functions are only available to custom editors
                     self.addAction(copy_to_upper)
                     self.addAction(copy_to_lower)
-                elif (isinstance(editor_widget, PlainEditor) == True and
-                      editor_widget.name == "REPL MESSAGES"):
+                elif (
+                    isinstance(editor_widget, PlainEditor)
+                    and editor_widget.name == "REPL MESSAGES"
+                ):
                     #REPL MESSAGES tab clear option
                     self.addAction(clear_repl_action)
-                if (isinstance(editor_widget, CustomEditor) == True or
-                    isinstance(editor_widget, PlainEditor) == True):
+                if isinstance(editor_widget, (CustomEditor, PlainEditor)):
                     #Diff functions for plain and custom editors
                     self.addSeparator()
                     add_diff_actions()
@@ -391,16 +398,17 @@ class TabWidget(data.QTabWidget):
                 self.addAction(move_to_lower)
                 self.addSeparator()
                 #Check the tab widget type
-                if isinstance(editor_widget, CustomEditor) == True:
+                if isinstance(editor_widget, CustomEditor):
                     #Copy functions are only available to custom editors
                     self.addAction(copy_to_main)
                     self.addAction(copy_to_lower)
-                elif (isinstance(editor_widget, PlainEditor) == True and
-                      editor_widget.name == "REPL MESSAGES"):
+                elif (
+                    isinstance(editor_widget, PlainEditor)
+                    and editor_widget.name == "REPL MESSAGES"
+                ):
                     #REPL MESSAGES tab clear option
                     self.addAction(clear_repl_action)
-                if (isinstance(editor_widget, CustomEditor) == True or
-                    isinstance(editor_widget, PlainEditor) == True):
+                if isinstance(editor_widget, (CustomEditor, PlainEditor)):
                     #Diff functions for plain and custom editors
                     self.addSeparator()
                     add_diff_actions()
@@ -410,16 +418,17 @@ class TabWidget(data.QTabWidget):
                 self.addAction(move_to_upper)
                 self.addSeparator()
                 #Check the tab widget type
-                if isinstance(editor_widget, CustomEditor) == True:
+                if isinstance(editor_widget, CustomEditor):
                     #Copy functions are only available to custom editors
                     self.addAction(copy_to_main)
                     self.addAction(copy_to_upper)
-                elif (isinstance(editor_widget, PlainEditor) == True and
-                      editor_widget.name == "REPL MESSAGES"):
+                elif (
+                    isinstance(editor_widget, PlainEditor)
+                    and editor_widget.name == "REPL MESSAGES"
+                ):
                     #REPL MESSAGES tab clear option
                     self.addAction(clear_repl_action)
-                if (isinstance(editor_widget, CustomEditor) == True or
-                    isinstance(editor_widget, PlainEditor) == True):
+                if isinstance(editor_widget, (CustomEditor, PlainEditor)):
                     #Diff functions for plain and custom editors
                     self.addSeparator()
                     add_diff_actions()
@@ -491,7 +500,11 @@ class TabWidget(data.QTabWidget):
         self.default_icon_size = self.tabBar().iconSize()
     
     def customize_tab_bar(self):
-        if data.custom_menu_scale != None and data.custom_menu_font != None:
+        if data.custom_menu_scale is None or data.custom_menu_font is None:
+            components.TheSquid.customize_menu_style(self.tabBar())
+            self.tabBar().setFont(data.get_current_font())
+            self.setIconSize(self.default_icon_size)
+        else:
             components.TheSquid.customize_menu_style(self.tabBar())
             self.tabBar().setFont(data.QFont(*data.custom_menu_font))
             new_icon_size = functions.create_size(
@@ -499,10 +512,6 @@ class TabWidget(data.QTabWidget):
                 data.custom_menu_scale
             )
             self.setIconSize(new_icon_size)
-        else:
-            components.TheSquid.customize_menu_style(self.tabBar())
-            self.tabBar().setFont(data.get_current_font())
-            self.setIconSize(self.default_icon_size)
         self.tabBar().set_style()
 
     def _drag_filter(self, event):
@@ -511,12 +520,10 @@ class TabWidget(data.QTabWidget):
         self.drag_source        = None
         if event.mimeData().hasUrls():
             url=event.mimeData().urls()[0]
-            if url.isValid():
-                # Filter out non file items
-                if url.scheme()=="file":
-                    # "toLocalFile" returns path to file
-                    self.drag_dropped_file=url.toLocalFile()
-                    event.accept()
+            if url.isValid() and url.scheme() == "file":
+                # "toLocalFile" returns path to file
+                self.drag_dropped_file=url.toLocalFile()
+                event.accept()
         elif event.mimeData().text() != None:
             try:
                 name, index = event.mimeData().text().split()
@@ -532,11 +539,12 @@ class TabWidget(data.QTabWidget):
         # Execute the superclass event method
         super().event(event)
         # Only check indication if the current widget is not indicated
-        if self.indicated == False:
-            if (event.type() == data.QEvent.KeyPress or
-                event.type() == data.QEvent.KeyRelease):
-                # Check indication
-                self._parent.view.indication_check()
+        if self.indicated == False and event.type() in [
+            data.QEvent.KeyPress,
+            data.QEvent.KeyRelease,
+        ]:
+            # Check indication
+            self._parent.view.indication_check()
         # Indicate that the event was processed by returning True
         return True
 
@@ -548,7 +556,7 @@ class TabWidget(data.QTabWidget):
         """Qt Drop event"""
         if self.drag_dropped_file != None:
             #Displays the file name with path
-            data.print_log("Drag&Dropped: " + str(self.drag_dropped_file))
+            data.print_log(f"Drag&Dropped: {str(self.drag_dropped_file)}")
             #Open file in a new scintilla tab
             self._parent.open_file(self.drag_dropped_file,  self)
             event.accept()
@@ -557,9 +565,8 @@ class TabWidget(data.QTabWidget):
             try:
                 name, str_index = self.drag_text.split()
                 index = int(str_index)
-                key_modifiers = data.QApplication.keyboardModifiers() 
-                if (key_modifiers == data.Qt.ControlModifier or
-                    key_modifiers == data.Qt.AltModifier):
+                key_modifiers = data.QApplication.keyboardModifiers()
+                if key_modifiers in [data.Qt.ControlModifier, data.Qt.AltModifier]:
                     self.copy_editor_in(self.drag_source, index)
                     data.print_log("Drag&Drop copied tab {:d} from the {} widget".format(index, name))
                 else:
@@ -577,16 +584,11 @@ class TabWidget(data.QTabWidget):
 
     def enterEvent(self, enter_event):
         """Event that fires when the focus shifts to the TabWidget"""
-        cw = self.currentWidget() 
+        cw = self.currentWidget()
         if cw != None:
-            #Check if the current widget is a custom editor or a QTextEdit widget
-            if isinstance(cw, CustomEditor):
-                #Get currently selected tab in the basic widget and display its name and lexer
-                self._parent.display.write_to_statusbar(cw.name)
-            else:
-                #Display only the QTextEdit name
-                self._parent.display.write_to_statusbar(cw.name)
-        data.print_log("Entered TabWidget: " + str(self.name))
+            #Get currently selected tab in the basic widget and display its name and lexer
+            self._parent.display.write_to_statusbar(cw.name)
+        data.print_log(f"Entered TabWidget: {str(self.name)}")
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -596,7 +598,7 @@ class TabWidget(data.QTabWidget):
         self._set_save_status()
         # Store the last focused widget to the parent
         self._parent.last_focused_widget = self
-        data.print_log("Stored \"{}\" as last focused widget".format(self.name))
+        data.print_log(f'Stored \"{self.name}\" as last focused widget')
         # Hide the function wheel if it is shown
         self._parent.view.hide_all_overlay_widgets()
         if (event.button() == data.Qt.RightButton and
@@ -604,13 +606,13 @@ class TabWidget(data.QTabWidget):
             # Show the function wheel if right clicked
             self._parent.view.show_function_wheel()
         # Display the tab name in the log window
-        if self.currentWidget() != None:
-            tab_name = self.currentWidget().name
-            data.print_log("Mouse click in: \"" + str(tab_name) + "\"")
-        else:
+        if self.currentWidget() is None:
             # Clear the cursor positions in the statusbar
             self._parent.display.update_cursor_position()
             data.print_log("Mouse click in: \"" + self.name + "\"")
+        else:
+            tab_name = self.currentWidget().name
+            data.print_log("Mouse click in: \"" + str(tab_name) + "\"")
         # Reset the click&drag context menu action
         components.ActionFilter.clear_action()
 
@@ -661,7 +663,7 @@ class TabWidget(data.QTabWidget):
         # Check if there is a tab in the tab widget
         current_tab = self.currentWidget()
         if current_tab:
-            data.print_log("Selected tab: " + str(self.currentWidget().name))
+            data.print_log(f"Selected tab: {str(self.currentWidget().name)}")
         # Update the icons of the tabs
         for i in range(self.count()):
             self.update_tab_icon(self.widget(i))
@@ -681,7 +683,8 @@ class TabWidget(data.QTabWidget):
             #Check if bookmarks need to be cleared
             if isinstance(self.widget(emmited_tab_number), CustomEditor):
                 self._parent.bookmarks.remove_editor_all(self.widget(emmited_tab_number))
-        data.print_log("Closing tab: " + str(self.tabText(emmited_tab_number)))
+
+        data.print_log(f"Closing tab: {str(self.tabText(emmited_tab_number))}")
         # Store the tab reference
         tab = self.widget(emmited_tab_number)
         #Check if the document is modified
@@ -690,7 +693,7 @@ class TabWidget(data.QTabWidget):
                 #Close the log window if it is displayed
                 self._parent.view.set_log_window(False)
                 #Display the close notification
-                close_message = "Document '" + self.tabText(emmited_tab_number)
+                close_message = f"Document '{self.tabText(emmited_tab_number)}"
                 close_message += "' has been modified!\nClose it anyway?"
                 reply = YesNoDialog.question(close_message)
                 if reply == data.QMessageBox.Yes:
@@ -730,13 +733,8 @@ class TabWidget(data.QTabWidget):
         """Enable/disable save/saveas buttons in the menubar"""
         cw = self.currentWidget()
         if cw != None:
-            #Check if the current widget is a custom editor or a QTextEdit widget
-            if isinstance(cw, CustomEditor):
-                #Get currently selected tab in the basic widget and display its name and lexer
-                self._parent.display.write_to_statusbar(cw.name)
-            else:
-                #Display only the QTextEdit name
-                self._parent.display.write_to_statusbar(cw.name)
+            #Get currently selected tab in the basic widget and display its name and lexer
+            self._parent.display.write_to_statusbar(cw.name)
             #Set the Save/SaveAs status of the menubar
             if cw.savable == data.CanSave.YES:
                 self._parent.set_save_file_state(True)
@@ -748,7 +746,7 @@ class TabWidget(data.QTabWidget):
     def _signal_text_changed(self):
         """Signal that is emmited when the document text changes"""
         #Check if the current widget is valid
-        if self.currentWidget() == None:
+        if self.currentWidget() is None:
             return
         #Update the save status of the current widget
         if self.currentWidget().savable == data.CanSave.YES:
@@ -760,8 +758,8 @@ class TabWidget(data.QTabWidget):
         self.editor_update_margin()
     
     def set_text_changed(self, index):
-        if not "*" in self.tabText(index):
-            self.setTabText(index, "*" + self.tabText(index) + "*")
+        if "*" not in self.tabText(index):
+            self.setTabText(index, f"*{self.tabText(index)}*")
     
     def reset_text_changed(self, index=None):
         """Reset the changed status of the current widget (remove the * symbols from the tab name)"""
@@ -784,10 +782,10 @@ class TabWidget(data.QTabWidget):
                 parent=lbl
             )
             movie.setCacheMode(data.QMovie.CacheAll)
-            if data.custom_menu_scale != None:
-                size = tuple([(x * data.custom_menu_scale / 16) for x in (16, 16)])
-            else:
+            if data.custom_menu_scale is None:
                 size = (16, 16)
+            else:
+                size = tuple(x * data.custom_menu_scale / 16 for x in (16, 16))
             movie.setScaledSize(functions.create_size(*size))
             lbl.setMovie(movie)
             movie.start()
@@ -810,7 +808,7 @@ class TabWidget(data.QTabWidget):
         elif isinstance(tab, int):
             # Close the tab
             self._signal_editor_tabclose(tab, force)
-        elif tab == None:
+        elif tab is None:
             # No tab number given, select the current tab for closing
             self._signal_editor_tabclose(self.currentIndex(), force)
         else:
@@ -888,7 +886,7 @@ class TabWidget(data.QTabWidget):
         new_editor_tab_index = self.addTab(new_editor_tab, document_name)
         #Make new tab visible
         self.setCurrentIndex(new_editor_tab_index)
-        data.print_log("Added new empty tab: " + document_name)
+        data.print_log(f"Added new empty tab: {document_name}")
         #Return the reference to the new added scintilla tab widget
         return self.widget(new_editor_tab_index)
     
@@ -902,14 +900,14 @@ class TabWidget(data.QTabWidget):
     
     def editor_add_document(self, document_name, type=None, bypass_check=False):
         """Check tab type and add a document to self(QTabWidget)"""
-        if type == "file":      
+        if type == "file":  
             ## New tab is a file on disk
             file_type = "unknown"
             if bypass_check == False:
                 file_type = functions.get_file_type(document_name)
             if file_type != "unknown" or bypass_check == True:
                 # Test if file can be read
-                if functions.test_text_file(document_name) == None:
+                if functions.test_text_file(document_name) is None:
                     self._parent.display.repl_display_message(
                         "Testing for TEXT file failed!", 
                         message_type=data.MessageType.ERROR
@@ -923,8 +921,8 @@ class TabWidget(data.QTabWidget):
                 # Add the scintilla document to the tab widget
                 new_editor_tab_index = self.addTab(new_editor_tab, os.path.basename(document_name))
                 # Make the new tab visible
-                self.setCurrentIndex(new_editor_tab_index)              
-                data.print_log("Added file: " + document_name)
+                self.setCurrentIndex(new_editor_tab_index)
+                data.print_log(f"Added file: {document_name}")
                 # Return the reference to the new added scintilla tab widget
                 return self.widget(new_editor_tab_index)
             else:
@@ -939,7 +937,7 @@ class TabWidget(data.QTabWidget):
             new_editor_tab_index = self.addTab(new_editor_tab, document_name)
             # Make new tab visible
             self.setCurrentIndex(new_editor_tab_index)
-            data.print_log("Added new empty tab: " + document_name)
+            data.print_log(f"Added new empty tab: {document_name}")
             # Return the reference to the new added scintilla tab widget
             return self.widget(new_editor_tab_index)
     
@@ -990,11 +988,9 @@ class TabWidget(data.QTabWidget):
             if current_index < self.tabBar().count()-1:
                 new_index = current_index + 1
                 self.setCurrentIndex(new_index)
-        else:
-            # Check if the widget is already at the far left
-            if current_index > 0:
-                new_index = current_index - 1
-                self.setCurrentIndex(new_index)
+        elif current_index > 0:
+            new_index = current_index - 1
+            self.setCurrentIndex(new_index)
     
     def move_tab(self, direction=data.Direction.RIGHT):
         """
@@ -1012,14 +1008,12 @@ class TabWidget(data.QTabWidget):
                 #This hack is needed to correctly focus the moved tab
                 self.setCurrentIndex(current_index)
                 self.setCurrentIndex(new_index)
-        else:
-            #Check if the widget is already at the far left
-            if current_index > 0:
-                new_index = current_index - 1
-                self.tabBar().moveTab(current_index, new_index)
-                #This hack is needed to correctly focus the moved tab
-                self.setCurrentIndex(current_index)
-                self.setCurrentIndex(new_index)
+        elif current_index > 0:
+            new_index = current_index - 1
+            self.tabBar().moveTab(current_index, new_index)
+            #This hack is needed to correctly focus the moved tab
+            self.setCurrentIndex(current_index)
+            self.setCurrentIndex(new_index)
     
     def update_tab_icon(self, tab):
         if (hasattr(tab, "current_icon") == True) and (tab.current_icon != None):
@@ -1030,10 +1024,10 @@ class TabWidget(data.QTabWidget):
         #Create a new reference to the source custom editor
         source_widget = source_tab_widget.widget(source_index)
         #Check if the source tab is valid
-        if source_widget == None:
+        if source_widget is None:
             return
         #PlainEditor tabs should not be copied
-        if isinstance(source_widget, CustomEditor) == False:
+        if not isinstance(source_widget, CustomEditor):
             self._parent.display.repl_display_message(
                 "Only custom editor tabs can be copied!", 
                 message_type=data.MessageType.ERROR
@@ -1060,10 +1054,10 @@ class TabWidget(data.QTabWidget):
         #Also reset the text change
         self.reset_text_changed(new_index)
         #Set Focus to the copied widget parent
-        if focus_name == None:
+        if focus_name is None:
             self._parent.view.set_window_focus(self.drag_source.name)
         else:
-            self._parent.view.set_window_focus(focus_name) 
+            self._parent.view.set_window_focus(focus_name)
         #Update the margin in the copied widget
         self.editor_update_margin()
 
@@ -1073,10 +1067,10 @@ class TabWidget(data.QTabWidget):
         moved_widget_icon   = source_tab_widget.tabIcon(source_index)
         moved_widget_text   = source_tab_widget.tabText(source_index)
         # Check if the source tab is valid
-        if moved_widget == None:
+        if moved_widget is None:
             return
         # PlainEditor tabs should not evaluate its name
-        if isinstance(moved_widget, CustomEditor) == True:
+        if isinstance(moved_widget, CustomEditor):
             # Check if the source file already exists in the target basic widget
             check_index = self._parent.check_open_file(moved_widget.save_name, self)
             if check_index != None:
@@ -1097,7 +1091,7 @@ class TabWidget(data.QTabWidget):
         This has to be done multiple times! 
         Don't know why yet, maybe the PyQt parent transfer happens in the background???
         """
-        for i in range(2):
+        for _ in range(2):
             self._signal_editor_tabindex_change(None)
             source_tab_widget._signal_editor_tabindex_change(None)
 

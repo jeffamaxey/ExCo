@@ -78,7 +78,7 @@ class ReplLineEdit(data.QLineEdit):
             main_form.display.repl_display_message
         )
         # Initialize interpreter reference list that will be used for autocompletions
-        self._list_repl_references  = [str_ref for str_ref in interpreter_references]
+        self._list_repl_references = list(interpreter_references)
         # Initialize style
         self.update_style()
     
@@ -119,8 +119,9 @@ class ReplLineEdit(data.QLineEdit):
         if os.path.isdir(base_path) == False:
             return path_list
         #Add items of directory to list
-        for item in os.listdir(base_path):
-            path_list.append(os.path.join(base_path, item))
+        path_list.extend(
+            os.path.join(base_path, item) for item in os.listdir(base_path)
+        )
         #Return the path item list
         return path_list
 
@@ -154,8 +155,7 @@ class ReplLineEdit(data.QLineEdit):
         elif pressed_key == 16777219:
             #A new character has been typed, reset the input buffer counter
             self._input_buffer["count"] = 0
-        elif (pressed_key == data.Qt.Key_Enter or
-                pressed_key == data.Qt.Key_Return):
+        elif pressed_key in [data.Qt.Key_Enter, data.Qt.Key_Return]:
             if self.selectedText() != "":
                 self.setCursorPosition(len(self.text()))
             else:
@@ -166,25 +166,20 @@ class ReplLineEdit(data.QLineEdit):
         """Evaluate string entered into the REPL widget"""
         data.print_log("REPL evaluated")
         #Check if an external evaluation string was specified
-        if external_string == None:
-            #No external evaluation string, evaluate the REPL text
-            current_command = self.text()
-        else:
-            current_command = external_string
+        current_command = self.text() if external_string is None else external_string
         #Display evaluated command if specified
         current_rm_index = None
         if display_action == True:
             repl_messages = self.main_form.display.find_repl_messages_tab()
-            if repl_messages != None:
-                if repl_messages._parent.count() > 1:
-                    current_rm_index = repl_messages._parent.currentIndex()
+            if repl_messages != None and repl_messages._parent.count() > 1:
+                current_rm_index = repl_messages._parent.currentIndex()
             #Display the evaluated command (this sets the focus to the REPL messages tab)
             split_command = current_command.split("\n")
             for i, command in enumerate(split_command):
                 if i != 0:
-                    self.main_form.display.repl_display_message("... " + command)
+                    self.main_form.display.repl_display_message(f"... {command}")
                 else:
-                    self.main_form.display.repl_display_message(">>> " + command)
+                    self.main_form.display.repl_display_message(f">>> {command}")
             if current_rm_index != None:
                 #Revert the focus of the TabWidget that hold the REPL messages tab to
                 #whichever widget was focused before
@@ -242,20 +237,19 @@ class ReplLineEdit(data.QLineEdit):
     def _cycle_autocompletion(self):
         """Cycle through autocompletion list"""
         #Return if there are no autocompletions
-        if self._ac_cycler == None:
+        if self._ac_cycler is None:
             return
         if self.selectedText() == "":
             #Current autocompletion is already shown without a selection area
             ac_start = len(self.text())
             self.setText(self.text() + next(self._ac_cycler))
-            end_pos = self.cursorPosition()
-            self.setSelection(ac_start, end_pos)
         else:
             #Current autocompletion has a selection area
             ac_start = self.selectionStart()
             self.setText(self.text()[:ac_start] + next(self._ac_cycler))
-            end_pos = self.cursorPosition()
-            self.setSelection(ac_start, end_pos)
+
+        end_pos = self.cursorPosition()
+        self.setSelection(ac_start, end_pos)
 
     def _input_buffer_cycle(self, direction=0):
         """Cycle the input buffer into the selected direction"""
@@ -270,14 +264,13 @@ class ReplLineEdit(data.QLineEdit):
             if self._input_buffer["count"] > -(len(self._input_buffer["list"])):
                 self._input_buffer["count"] -= 1
             self.setText(self._input_buffer["list"][self._input_buffer["count"]])
+        elif self._input_buffer["count"] < -1:
+            self._input_buffer["count"] += 1
+            self.setText(self._input_buffer["list"][self._input_buffer["count"]])
         else:
-            if self._input_buffer["count"] < -1:
-                self._input_buffer["count"] += 1
-                self.setText(self._input_buffer["list"][self._input_buffer["count"]])
-            else:
-                #Show currently saved input text (the text that the user typed before pressing up)
-                self._input_buffer["count"] = 0
-                self.setText(self._input_buffer["current_input"])
+            #Show currently saved input text (the text that the user typed before pressing up)
+            self._input_buffer["count"] = 0
+            self.setText(self._input_buffer["current_input"])
     
     def _input_buffer_add(self,  entry):
         """Add a single value to the input buffer"""
@@ -309,11 +302,7 @@ class ReplLineEdit(data.QLineEdit):
         raw_text                = string
         current_sequence    = ""
         previous_sequence   = ""
-        #List the separators as they appear in the raw string
-        separator_list = []
-        for ch in raw_text:
-            if ch in self._comparison_list:
-                separator_list.append(ch)
+        separator_list = [ch for ch in raw_text if ch in self._comparison_list]
         #Do the standard autocompletion parse
         for i, ch_1 in reversed(list(enumerate(raw_text))):
             #Get the last valid separation character
@@ -335,7 +324,7 @@ class ReplLineEdit(data.QLineEdit):
         if not [x for x in raw_text if x in self._comparison_list]:
             #None of the separator characters were found in current text
             current_sequence = self.text()
-        data.print_log(previous_sequence + "  " + current_sequence)
+        data.print_log(f"{previous_sequence}  {current_sequence}")
         return [current_sequence, previous_sequence]
     
     def _find_autocompletions(self, current_sequences_list):
@@ -345,7 +334,7 @@ class ReplLineEdit(data.QLineEdit):
         found_list              = []
         if previous_sequence != "":
             for ref in self._list_second_level_completions:
-                if ref.startswith(previous_sequence + "." + current_sequence):
+                if ref.startswith(f"{previous_sequence}.{current_sequence}"):
                     #Autocompletion found, delete the part of the autocompletion that is already written
                     found_list.append(ref.replace(previous_sequence + "." + current_sequence, ""))
         else:
@@ -503,22 +492,21 @@ class ReplLineEdit(data.QLineEdit):
         #The keyword dictionary is different from the references, look in the interpreter module
         ext_first_level = [self.interpreter.dict_keywords[keyword][0] for keyword in self.interpreter.dict_keywords]
         self._list_first_level_completions.extend(ext_first_level)
-        #Convert lists to sets and back to remove duplicates
-        self._list_first_level_completions  = list(set(self._list_first_level_completions))
-        self._list_second_level_completions = list(set(self._list_second_level_completions))
-        #Sort the new lists alphabetically
-        self._list_first_level_completions.sort()
-        self._list_second_level_completions.sort()
+        self._list_first_level_completions = sorted(
+            set(self._list_first_level_completions)
+        )
+        self._list_second_level_completions = sorted(
+            set(self._list_second_level_completions)
+        )
     
     def interpreter_add_references(self, new_references):
         """Append new references to the existing REPL interpreter references"""
         self._list_first_level_completions = list(self._list_first_level_completions)
         #Extend the primary autocompletions
         self._list_first_level_completions.extend(new_references)
-        #Convert list to set and back to remove duplicates
-        self._list_first_level_completions = list(set(self._list_first_level_completions))
-        #Sort the new lists alphabetically
-        self._list_first_level_completions.sort()
+        self._list_first_level_completions = sorted(
+            set(self._list_first_level_completions)
+        )
     
     def interpreter_reset_references(self, new_references, first_level_list, second_level_list):
         """Clear all of the interpreter references and update them with the new ones"""

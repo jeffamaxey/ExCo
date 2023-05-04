@@ -63,15 +63,14 @@ class IconManipulator:
             obj._parent.update_tab_icon(obj)
     
     def update_corner_widget(self, obj):
-        if self.corner_groupbox != None:
-            tab_widget = self._tab_widget
-            self.show_corner_groupbox(tab_widget)
-            return True
-        else:
+        if self.corner_groupbox is None:
             return False
+        tab_widget = self._tab_widget
+        self.show_corner_groupbox(tab_widget)
+        return True
     
     def remove_corner_groupbox(self):
-        if self.corner_groupbox == None:
+        if self.corner_groupbox is None:
             return
         if not sip.isdeleted(self.corner_groupbox):
             self.corner_groupbox.setParent(None)
@@ -90,7 +89,7 @@ class IconManipulator:
     
     def add_corner_button(self, icon, tooltip, function):
         # Create the group box for buttons if needed
-        if self.corner_groupbox == None:
+        if self.corner_groupbox is None:
             self.corner_groupbox = data.QGroupBox(self._tab_widget)
             corner_layout = data.QHBoxLayout()
             corner_layout.setSpacing(0)
@@ -112,7 +111,7 @@ class IconManipulator:
                 )
     
     def restyle_corner_button_icons(self):
-        if self.corner_groupbox == None:
+        if self.corner_groupbox is None:
             return
         layout = self.corner_groupbox.layout()
         for i in range(layout.count()):
@@ -125,7 +124,7 @@ class IconManipulator:
                 )
     
     def update_corner_button_icon(self, icon, index=0):
-        if self.corner_groupbox == None:
+        if self.corner_groupbox is None:
             return
         layout = self.corner_groupbox.layout()
         if isinstance(icon, data.QIcon):
@@ -136,7 +135,7 @@ class IconManipulator:
             )
     
     def show_corner_groupbox(self, tab_widget):
-        if self.corner_groupbox == None:
+        if self.corner_groupbox is None:
             return
         tab_widget.setCornerWidget(self.corner_groupbox)
         self.corner_groupbox.show()
